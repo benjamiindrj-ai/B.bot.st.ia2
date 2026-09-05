@@ -1,0 +1,8 @@
+{
+  "name": "BNZSTRATS IA",
+  "description": "Plateforme d'analyse Sport IA & Bot Casino Stake.com avec Régression Bayésienne (filtrage cotes [1,15 - 1,85], alerte visuelle > 80% & confiance > 75%), Surebets & Arbitrage 100% garanti, Combinés Optimisés EV+ & Kelly, et Optimiseur des Multiplicateurs.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
