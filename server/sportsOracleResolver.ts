@@ -2,12 +2,14 @@ import { GoogleGenAI } from '@google/genai';
 
 export interface ScoreboardEvent {
   id: string;
+  externalId?: string;
   sport: 'football' | 'basketball' | 'tennis' | 'mma' | 'esports' | 'hockey' | 'baseball' | 'rugby' | 'other';
   match: string;
   homeTeam: string;
   awayTeam: string;
   league: string;
   date: string;
+  dateKey?: string; // YYYY-MM-DD
   timestamp: number;
   isLive: boolean;
   isUpcoming: boolean;
@@ -20,6 +22,7 @@ export interface ScoreboardEvent {
   statusDetail?: string;
   setsOrPeriods?: string[];
   source: string;
+  matchedVerificationMethod?: 'event_id_exact' | 'bilateral_teams_and_date';
 }
 
 export interface BetEvaluationResult {
@@ -31,46 +34,55 @@ export interface BetEvaluationResult {
   autoResolved: boolean;
   resolvedAt?: number;
   sourceBadge?: string;
+  verifiedEventId?: string;
+  verifiedEventDate?: string;
+  auditVerificationMethod?: 'event_id_exact' | 'bilateral_teams_and_date' | 'grounded_search_verified' | 'unresolved_pending';
 }
 
 // In-memory cache for recent scoreboards
 let scoreboardCache: { timestamp: number; events: ScoreboardEvent[] } | null = null;
 const CACHE_TTL_MS = 45 * 1000; // 45 seconds cache
 
-// Team name aliases & abbreviations for accurate fuzzy matching
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Curated Team name aliases & abbreviations for accurate matching
 const TEAM_ALIASES: Record<string, string[]> = {
-  'real madrid': ['real madrid', 'r. madrid', 'real madrid cf', 'rmcf', 'madrid'],
-  'atletico madrid': ['atletico madrid', 'atletico de madrid', 'atlético madrid', 'atleti', 'atm'],
-  'barcelona': ['fc barcelona', 'barcelona', 'barca', 'barça', 'fcb'],
-  'paris saint-germain': ['paris saint-germain', 'paris sg', 'psg', 'paris'],
+  'real madrid': ['real madrid', 'r. madrid', 'real madrid cf', 'rmcf', 'los blancos'],
+  'atletico madrid': ['atletico madrid', 'atletico de madrid', 'atlético madrid', 'atleti', 'atm', 'colchoneros'],
+  'barcelona': ['fc barcelona', 'barcelona', 'barca', 'barça', 'blaugrana'],
+  'paris saint-germain': ['paris saint-germain', 'paris sg', 'psg'],
+  'paris fc': ['paris fc', 'pfc'],
   'olympique de marseille': ['olympique de marseille', 'marseille', 'om'],
   'olympique lyonnais': ['olympique lyonnais', 'lyon', 'ol'],
   'as monaco': ['as monaco', 'monaco', 'asm'],
   'borussia dortmund': ['borussia dortmund', 'dortmund', 'bvb', 'bvb 09'],
   'bayern munich': ['bayern munich', 'bayern münchen', 'fc bayern', 'bayern'],
-  'manchester city': ['manchester city', 'man city', 'mcfc', 'city'],
-  'manchester united': ['manchester united', 'man united', 'man utd', 'mufc', 'united'],
+  'bayer leverkusen': ['bayer leverkusen', 'leverkusen', 'b04'],
+  'manchester city': ['manchester city', 'man city', 'mcfc'],
+  'manchester united': ['manchester united', 'man united', 'man utd', 'mufc'],
   'arsenal': ['arsenal', 'arsenal fc', 'gunners'],
-  'liverpool': ['liverpool', 'liverpool fc', 'lfc'],
-  'chelsea': ['chelsea', 'chelsea fc', 'cfc'],
+  'liverpool': ['liverpool', 'liverpool fc', 'lfc', 'reds'],
+  'chelsea': ['chelsea', 'chelsea fc', 'blues'],
   'tottenham hotspur': ['tottenham hotspur', 'tottenham', 'spurs'],
-  'aston villa': ['aston villa', 'villa'],
-  'newcastle united': ['newcastle united', 'newcastle', 'nufc'],
+  'aston villa': ['aston villa', 'villa', 'avfc'],
+  'newcastle united': ['newcastle united', 'newcastle', 'nufc', 'magpies'],
   'wolverhampton wanderers': ['wolverhampton wanderers', 'wolverhampton', 'wolves'],
-  'juventus': ['juventus', 'juve', 'juventus fc'],
-  'inter milan': ['inter milan', 'internazionale', 'inter', 'fc inter'],
+  'juventus': ['juventus', 'juve', 'juventus fc', 'bianconeri'],
+  'inter milan': ['inter milan', 'internazionale', 'inter', 'fc inter', 'nerazzurri'],
   'ac milan': ['ac milan', 'milan', 'rossoneri'],
-  'as roma': ['as roma', 'roma'],
-  'ssc napoli': ['ssc napoli', 'napoli'],
-  'sporting cp': ['sporting cp', 'sporting lisbon', 'sporting'],
-  'sl benfica': ['sl benfica', 'benfica'],
-  'fc porto': ['fc porto', 'porto'],
-  'al-hilal': ['al-hilal', 'al hilal', 'hilal'],
-  'al-nassr': ['al-nassr', 'al nassr', 'nassr'],
+  'as roma': ['as roma', 'roma', 'giallorossi'],
+  'ssc napoli': ['ssc napoli', 'napoli', 'partenopei'],
+  'sporting cp': ['sporting cp', 'sporting portugal', 'sporting lisbon'],
+  'sl benfica': ['sl benfica', 'benfica', 'slb', 'aguias'],
+  'fc porto': ['fc porto', 'porto', 'dragoes'],
+  'al-hilal': ['al-hilal', 'al hilal'],
+  'al-nassr': ['al-nassr', 'al nassr'],
   // Basketball NBA
   'boston celtics': ['boston celtics', 'celtics', 'boston'],
   'dallas mavericks': ['dallas mavericks', 'mavericks', 'mavs', 'dallas'],
-  'golden state warriors': ['golden state warriors', 'warriors', 'gsw'],
+  'golden state warriors': ['golden state warriors', 'warriors', 'gsw', 'golden state'],
   'los angeles lakers': ['los angeles lakers', 'lakers', 'lal'],
   'los angeles clippers': ['los angeles clippers', 'clippers', 'lac'],
   'denver nuggets': ['denver nuggets', 'nuggets', 'denver'],
@@ -79,7 +91,7 @@ const TEAM_ALIASES: Record<string, string[]> = {
   'new york knicks': ['new york knicks', 'knicks', 'ny knicks'],
   'miami heat': ['miami heat', 'heat', 'miami'],
   'oklahoma city thunder': ['oklahoma city thunder', 'thunder', 'okc'],
-  'minnesota timberwolves': ['minnesota timberwolves', 'timberwolves', 'wolves'],
+  'minnesota timberwolves': ['minnesota timberwolves', 'timberwolves', 't-wolves'],
   'phoenix suns': ['phoenix suns', 'suns', 'phoenix'],
   // Tennis
   'carlos alcaraz': ['carlos alcaraz', 'c. alcaraz', 'alcaraz'],
@@ -103,84 +115,234 @@ const TEAM_ALIASES: Record<string, string[]> = {
 };
 
 /**
- * Clean & normalize a team/athlete name string for fuzzy matching
+ * Clean & normalize a team/athlete name string for fuzzy matching.
+ * Only strips non-distinctive generic prefixes/suffixes (fc, cf, sc, ac, club, etc.)
+ * Preserves discriminators like city, united, real, atletico, saint-germain, etc.
  */
-function normalizeName(name: string): string {
+export function normalizeName(name: string): string {
   if (!name) return '';
   return name
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '') // remove accents
-    .replace(/\b(fc|cf|ac|as|bc|rb|ssc|sc|cd|club|deportivo|sporting|athletic|atletico|united|city|town|wanderers|hotspur|saint-germain|sg)\b/gi, '')
+    .replace(/\b(fc|cf|ac|as|bc|rb|ssc|sc|cd|fk|sk|club|deportivo)\b/gi, '')
     .replace(/[^a-z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
 
 /**
- * Token set similarity (Jaccard similarity on significant words)
+ * Find canonical team key if matched in curated dictionary
  */
-function tokenSimilarity(str1: string, str2: string): number {
-  const norm1 = normalizeName(str1);
-  const norm2 = normalizeName(str2);
-  if (norm1 === norm2) return 1.0;
-  if (!norm1 || !norm2) return 0;
+function getCanonicalTeam(name: string): string | null {
+  if (!name) return null;
+  const lower = name.toLowerCase().trim();
+  const norm = normalizeName(name);
 
-  const tokens1 = new Set(norm1.split(' ').filter((t) => t.length > 1));
-  const tokens2 = new Set(norm2.split(' ').filter((t) => t.length > 1));
+  for (const [canonical, aliases] of Object.entries(TEAM_ALIASES)) {
+    for (const al of aliases) {
+      if (!al) continue;
+      const normAl = normalizeName(al);
+      if (lower === al || norm === normAl) return canonical;
 
-  if (tokens1.size === 0 || tokens2.size === 0) return 0;
-
-  let intersectionCount = 0;
-  for (const t of tokens1) {
-    if (tokens2.has(t)) intersectionCount++;
-    else {
-      // Substring check for short vs long names (e.g. "Dortmund" vs "Borussia Dortmund")
-      for (const t2 of tokens2) {
-        if (t.includes(t2) || t2.includes(t)) {
-          intersectionCount += 0.8;
-          break;
-        }
+      // Safe word boundary regex check
+      if (al.length >= 4) {
+        const regex = new RegExp(`(^|\\s)${escapeRegex(al)}(\\s|$)`, 'i');
+        if (regex.test(lower)) return canonical;
+      }
+      if (normAl.length >= 4) {
+        const regex = new RegExp(`(^|\\s)${escapeRegex(normAl)}(\\s|$)`, 'i');
+        if (regex.test(norm)) return canonical;
       }
     }
   }
-
-  const unionSize = new Set([...tokens1, ...tokens2]).size;
-  return intersectionCount / unionSize;
+  return null;
 }
 
 /**
- * Check if name A matches name B using aliases and fuzzy comparison
+ * Check if name A matches name B using strict canonical resolution and conflict guards
  */
-function isTeamMatch(nameA: string, nameB: string): boolean {
+export function isTeamMatch(nameA: string, nameB: string): boolean {
   if (!nameA || !nameB) return false;
   const nA = nameA.toLowerCase().trim();
   const nB = nameB.toLowerCase().trim();
 
+  // 1. Direct equality
   if (nA === nB) return true;
 
+  // 2. Canonical mapping resolution
+  const canonA = getCanonicalTeam(nameA);
+  const canonB = getCanonicalTeam(nameB);
+  if (canonA && canonB) {
+    return canonA === canonB;
+  }
+
+  // 3. Conflict Guards: Never cross-match known rival / distinct city teams
+  const hasCityA = /\bcity\b/i.test(nA);
+  const hasCityB = /\bcity\b/i.test(nB);
+  const hasUtdA = /\bunited\b/i.test(nA);
+  const hasUtdB = /\bunited\b/i.test(nB);
+  if ((hasCityA && !hasCityB && hasUtdB) || (hasUtdA && !hasUtdB && hasCityB)) return false;
+
+  const hasRealA = /\breal\b/i.test(nA);
+  const hasRealB = /\breal\b/i.test(nB);
+  const hasAtlA = /\batletico\b/i.test(nA);
+  const hasAtlB = /\batletico\b/i.test(nB);
+  if ((hasRealA && !hasRealB && hasAtlB) || (hasAtlA && !hasAtlB && hasRealB)) return false;
+
+  const isParisFcA = /\bparis\s+fc\b/i.test(nA);
+  const isParisFcB = /\bparis\s+fc\b/i.test(nB);
+  const isPsgA = /\b(saint-germain|psg|paris\s+sg)\b/i.test(nA);
+  const isPsgB = /\b(saint-germain|psg|paris\s+sg)\b/i.test(nB);
+  if ((isParisFcA && isPsgB) || (isParisFcB && isPsgA)) return false;
+
+  const isInterA = /\binter\b/i.test(nA);
+  const isInterB = /\binter\b/i.test(nB);
+  const isMilanA = /\b(ac\s+milan|milan)\b/i.test(nA) && !isInterA;
+  const isMilanB = /\b(ac\s+milan|milan)\b/i.test(nB) && !isInterB;
+  if ((isInterA && isMilanB) || (isInterB && isMilanA)) return false;
+
+  // 4. Normalized string equality
   const normA = normalizeName(nameA);
   const normB = normalizeName(nameB);
-  if (normA === normB && normA.length > 1) return true;
-  if (normA.includes(normB) || normB.includes(normA)) {
-    if (Math.min(normA.length, normB.length) >= 3) return true;
+  if (normA && normB && normA === normB && normA.length >= 3) return true;
+
+  // 5. Significant word token intersection
+  const tokensA = new Set(normA.split(' ').filter((t) => t.length >= 3));
+  const tokensB = new Set(normB.split(' ').filter((t) => t.length >= 3));
+  if (tokensA.size === 0 || tokensB.size === 0) return false;
+
+  let commonCount = 0;
+  for (const t of tokensA) {
+    if (tokensB.has(t)) commonCount++;
+  }
+  const minTokens = Math.min(tokensA.size, tokensB.size);
+  // If the distinctive single or full token set completely overlaps
+  if (commonCount >= 1 && commonCount === minTokens) return true;
+
+  // Jaccard similarity threshold >= 0.70
+  const unionSize = new Set([...tokensA, ...tokensB]).size;
+  return commonCount / unionSize >= 0.70;
+}
+
+/**
+ * Format a timestamp or Date to YYYY-MM-DD (UTC)
+ */
+export function formatDateKey(dateInput: number | string | Date): string {
+  try {
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return '';
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(d.getUTCDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Extract timestamp from bet or date string with high tolerance
+ */
+export function extractBetTimestamp(bet: any): number {
+  if (typeof bet?.kickoffTimestamp === 'number' && bet.kickoffTimestamp > 1000000000000) {
+    return bet.kickoffTimestamp;
+  }
+  if (bet?.kickoffTime && typeof bet.kickoffTime === 'string') {
+    const parsed = Date.parse(bet.kickoffTime);
+    if (!isNaN(parsed)) return parsed;
+  }
+  if (bet?.date && typeof bet.date === 'string') {
+    const parsed = Date.parse(bet.date);
+    if (!isNaN(parsed)) return parsed;
+  }
+  if (typeof bet?.createdAt === 'number' && bet.createdAt > 1000000000000) {
+    return bet.createdAt;
+  }
+  return Date.now();
+}
+
+/**
+ * Verify whether two match dates are consistent for the SAME sporting fixture:
+ * Considers timezones, kickoff adjustments, and ensures matches from different
+ * matchdays/weeks/tournaments (diff > 36 hours) are strictly rejected.
+ */
+export function isDateMatch(betTime: number, eventTime: number, maxHoursDiff = 36): boolean {
+  if (!betTime || !eventTime) return false;
+  const diffMs = Math.abs(betTime - eventTime);
+  const diffHours = diffMs / (3600 * 1000);
+  return diffHours <= maxHoursDiff;
+}
+
+/**
+ * Clean & normalize fixture IDs to their core alphanumeric identity
+ * e.g. "football-401694589" -> "401694589"
+ * e.g. "apisports-football-123456" -> "123456"
+ * e.g. "espn-401694589" -> "401694589"
+ */
+export function normalizeEventId(idStr: string): string {
+  if (!idStr) return '';
+  return String(idStr)
+    .replace(/^(apisports|espn|stake-tip|live|tip|tracked)-/i, '')
+    .replace(/^(football|basketball|tennis|mma|hockey|baseball|esports|rugby)-/i, '')
+    .trim();
+}
+
+/**
+ * Robust Event ID verification between a bet and a scoreboard event.
+ * Checks both raw ID equality, normalized core ID equality, and ensures
+ * that the core ID has sufficient specificity (not a generic 1-digit index).
+ */
+export function isEventIdMatch(betFixtureId: string, eventId: string, eventExternalId?: string): boolean {
+  if (!betFixtureId || (!eventId && !eventExternalId)) return false;
+  
+  const bRaw = String(betFixtureId).trim().toLowerCase();
+  const eRaw = String(eventId).trim().toLowerCase();
+  const extRaw = eventExternalId ? String(eventExternalId).trim().toLowerCase() : '';
+
+  // Direct raw equality
+  if (bRaw === eRaw || (extRaw && bRaw === extRaw)) return true;
+
+  // Normalized core comparison
+  const bCore = normalizeEventId(bRaw);
+  const eCore = normalizeEventId(eRaw);
+  const extCore = extRaw ? normalizeEventId(extRaw) : '';
+
+  // Guard: core ID must be at least 5 characters to avoid matching generic short IDs like "1", "0"
+  if (bCore.length >= 5) {
+    if (bCore === eCore) return true;
+    if (extCore && bCore === extCore) return true;
   }
 
-  // Check alias lookup
-  for (const [canonical, aliases] of Object.entries(TEAM_ALIASES)) {
-    const aMatches = aliases.some((al) => nA.includes(al) || normA.includes(normalizeName(al)));
-    const bMatches = aliases.some((al) => nB.includes(al) || normB.includes(normalizeName(al)));
-    if (aMatches && bMatches) return true;
+  return false;
+}
+
+/**
+ * Robustly extract bilateral teams (Home vs Away) from a bet
+ */
+export function extractTeamsFromBet(bet: any): { home: string; away: string; isBilateral: boolean } {
+  if (bet?.homeTeam && bet?.awayTeam) {
+    return { home: String(bet.homeTeam).trim(), away: String(bet.awayTeam).trim(), isBilateral: true };
   }
 
-  // Token similarity threshold > 0.45
-  return tokenSimilarity(nameA, nameB) >= 0.45;
+  const cleanMatch = cleanMatchTitle(bet?.match || '');
+  const delimRegex = /\s+(?:vs\.?|v\.?|–|—|-|\/|contre|@|at)\s+/i;
+  const matchSplit = cleanMatch.split(delimRegex);
+
+  if (matchSplit.length >= 2) {
+    const home = matchSplit[0].trim();
+    const away = matchSplit.slice(1).join(' - ').trim();
+    return { home, away, isBilateral: true };
+  }
+
+  return { home: cleanMatch.trim(), away: '', isBilateral: false };
 }
 
 /**
  * Fetch past 7 days up to next 2 days across all ESPN multi-sport scoreboards
+ * Also accepts optional extraEvents (e.g. from Stake/API-Sports cache)
  */
-export async function fetchScoreboardFeeds(): Promise<ScoreboardEvent[]> {
+export async function fetchScoreboardFeeds(extraEvents?: any[]): Promise<ScoreboardEvent[]> {
   const now = Date.now();
   if (scoreboardCache && now - scoreboardCache.timestamp < CACHE_TTL_MS) {
     return scoreboardCache.events;
@@ -323,14 +485,17 @@ export async function fetchScoreboardFeeds(): Promise<ScoreboardEvent[]> {
             const dedupKey = `${ep.sport}-${homeName.toLowerCase()}-${awayName.toLowerCase()}-${eventDateMs}`;
             if (!seenKeys.has(dedupKey)) {
               seenKeys.add(dedupKey);
+              const compExternalId = String(comp.id || ev.id || '');
               events.push({
-                id: `${ep.sport}-${comp.id || ev.id || Math.random().toString(36).substring(7)}`,
+                id: `${ep.sport}-${compExternalId || Math.random().toString(36).substring(7)}`,
+                externalId: compExternalId,
                 sport: ep.sport,
                 match: `${homeName} vs ${awayName}`,
                 homeTeam: homeName,
                 awayTeam: awayName,
                 league: ep.league || comp.league?.name || 'Compétition Officielle',
                 date: ev.date || comp.date || new Date(eventDateMs).toISOString(),
+                dateKey: formatDateKey(eventDateMs),
                 timestamp: eventDateMs,
                 isLive,
                 isUpcoming,
@@ -352,71 +517,153 @@ export async function fetchScoreboardFeeds(): Promise<ScoreboardEvent[]> {
     })
   );
 
+  // Merge extra real events (e.g. from Stake / API-Sports cache)
+  if (Array.isArray(extraEvents) && extraEvents.length > 0) {
+    for (const ev of extraEvents) {
+      if (!ev || !ev.match) continue;
+      const homeName = ev.homeTeam || (ev.match.split(/\s+vs\.?\s+/i)[0] || '').trim();
+      const awayName = ev.awayTeam || (ev.match.split(/\s+vs\.?\s+/i)[1] || '').trim();
+      if (!homeName || !awayName) continue;
+
+      const eventDateMs = ev.timestamp || (ev.date ? Date.parse(ev.date) : now);
+      const dedupKey = `${ev.sport || 'football'}-${homeName.toLowerCase()}-${awayName.toLowerCase()}-${eventDateMs}`;
+      if (!seenKeys.has(dedupKey)) {
+        seenKeys.add(dedupKey);
+        const homeScoreNum = typeof ev.homeScore === 'number' ? ev.homeScore : 0;
+        const awayScoreNum = typeof ev.awayScore === 'number' ? ev.awayScore : 0;
+        events.push({
+          id: ev.stakeFixtureId || ev.id || `extra-${eventDateMs}`,
+          externalId: ev.stakeFixtureId || ev.id,
+          sport: ev.sport || 'football',
+          match: `${homeName} vs ${awayName}`,
+          homeTeam: homeName,
+          awayTeam: awayName,
+          league: ev.league || 'Compétition Officielle',
+          date: ev.date || new Date(eventDateMs).toISOString(),
+          dateKey: formatDateKey(eventDateMs),
+          timestamp: eventDateMs,
+          isLive: !!ev.isLive,
+          isUpcoming: !!ev.isUpcoming,
+          isFinished: !!ev.isFinished,
+          homeScore: homeScoreNum,
+          awayScore: awayScoreNum,
+          displayScore: ev.isFinished || ev.isLive ? `${homeScoreNum} - ${awayScoreNum}` : '0 - 0',
+          clock: ev.isLive ? 'En Direct' : ev.isFinished ? 'Terminé' : 'À venir',
+          statusDetail: ev.isFinished ? 'Terminé (Score Officiel)' : ev.isLive ? 'En Direct' : 'À venir',
+          source: ev.source || 'Stake / API-Sports Multi-Feed',
+        });
+      }
+    }
+  }
+
   scoreboardCache = { timestamp: now, events };
   return events;
 }
 
 /**
- * Match a tracked bet with an event from the scoreboards
+ * Extract clean match string without [LIVE] or (Score) annotations
+ */
+export function cleanMatchTitle(matchStr: string): string {
+  if (!matchStr) return '';
+  return matchStr
+    .replace(/\[LIVE.*?\]|\(LIVE.*?\)|\[FIN.*?\]|\(Terminé.*?\)|\[Score.*?\]/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Match a tracked bet with an event from the scoreboards.
+ * Strictly guarantees:
+ * 1. Both home and away participants match using strict canonical aliases & conflict guards.
+ * 2. Scheduled date and event timestamp are within a mandatory 36-hour window.
+ * 3. Never borrows past scores for upcoming scheduled matches.
+ * 4. Verifies Event IDs for direct matches with date sanity checks.
  */
 export function findMatchingScoreboardEvent(bet: any, scoreboards: ScoreboardEvent[]): ScoreboardEvent | null {
-  const betMatch = (bet.match || '').trim();
-  const betSport = (bet.sport || '').toLowerCase();
+  if (!Array.isArray(scoreboards) || scoreboards.length === 0) return null;
 
-  // 1. Check direct fixture ID match
-  if (bet.stakeFixtureId) {
-    const directMatch = scoreboards.find((e) => e.id === bet.stakeFixtureId || e.id.includes(bet.stakeFixtureId));
-    if (directMatch) return directMatch;
-  }
+  const cleanMatch = cleanMatchTitle(bet?.match || '');
+  const betSport = (bet?.sport || '').toLowerCase();
+  const { home: betHome, away: betAway, isBilateral } = extractTeamsFromBet(bet);
+  const betTime = extractBetTimestamp(bet);
+  const nowMs = Date.now();
 
-  // Parse home and away teams from bet match string (e.g. "Real Madrid vs Borussia Dortmund", "Arsenal - Chelsea", "Alcaraz / Sinner")
-  const delimiters = [' vs ', ' v ', ' - ', ' / ', ' contre ', ' @ '];
-  let betHome = '';
-  let betAway = '';
+  const betFixtureId = bet?.stakeFixtureId || bet?.fixtureId || bet?.eventId || bet?.tipId;
 
-  for (const d of delimiters) {
-    if (betMatch.includes(d)) {
-      const parts = betMatch.split(d);
-      betHome = parts[0].trim();
-      betAway = parts.slice(1).join(d).trim();
-      break;
+  // =========================================================================
+  // STAGE 1: Direct Event ID Match with Date & Team Consistency Verification
+  // =========================================================================
+  if (betFixtureId && String(betFixtureId).length >= 5) {
+    const directMatch = scoreboards.find((e) => isEventIdMatch(betFixtureId, e.id, e.externalId));
+    if (directMatch) {
+      // 1. Sport check
+      const sportOk = !betSport || betSport === 'all' || betSport === 'other' || !directMatch.sport || directMatch.sport === betSport;
+      
+      // 2. Strict Date window check: must not exceed 36 hours from scheduled bet kickoff
+      const dateOk = isDateMatch(betTime, directMatch.timestamp, 36);
+
+      // 3. Team consistency guard: At least one participant must be consistent
+      const homeValid = !betHome || isTeamMatch(betHome, directMatch.homeTeam) || isTeamMatch(betHome, directMatch.awayTeam);
+      const awayValid = !betAway || isTeamMatch(betAway, directMatch.homeTeam) || isTeamMatch(betAway, directMatch.awayTeam);
+
+      if (sportOk && dateOk && homeValid && awayValid) {
+        return {
+          ...directMatch,
+          matchedVerificationMethod: 'event_id_exact',
+        };
+      }
     }
   }
 
-  if (!betHome || !betAway) {
-    betHome = betMatch;
-    betAway = '';
+  // =========================================================================
+  // STAGE 2: Bilateral Team Matching with Mandatory Date Window Verification
+  // =========================================================================
+  // Anti-Contamination Guard: If both teams are not known (single team without opponent),
+  // do NOT match with any arbitrary event from the scoreboards!
+  if (!isBilateral || !betHome || !betAway) {
+    return null;
   }
 
   let bestEvent: ScoreboardEvent | null = null;
-  let bestScore = 0;
+  let minTimeDiffMs = Infinity;
 
   for (const ev of scoreboards) {
-    // Filter by sport if sport is compatible
+    // 1. Sport Compatibility Filter
     if (betSport && ev.sport && betSport !== 'all' && betSport !== 'other') {
       if (betSport !== ev.sport) continue;
     }
 
-    // Direct / Alias matching
+    // 2. Bilateral Team Verification (BOTH teams must match)
     const homeMatches = isTeamMatch(betHome, ev.homeTeam);
-    const awayMatches = betAway ? isTeamMatch(betAway, ev.awayTeam) : true;
+    const awayMatches = isTeamMatch(betAway, ev.awayTeam);
 
-    // Cross-matching (in case home/away were inverted)
-    const crossHomeMatches = betAway ? isTeamMatch(betHome, ev.awayTeam) : false;
+    const crossHomeMatches = isTeamMatch(betHome, ev.awayTeam);
     const crossAwayMatches = isTeamMatch(betAway, ev.homeTeam);
 
-    if ((homeMatches && awayMatches) || (crossHomeMatches && crossAwayMatches)) {
-      // Score match based on date proximity if kickoffTimestamp is available
-      let proximityScore = 1.0;
-      if (bet.kickoffTimestamp && ev.timestamp) {
-        const diffHours = Math.abs(bet.kickoffTimestamp - ev.timestamp) / (3600 * 1000);
-        if (diffHours < 24) proximityScore += 0.5;
-        if (diffHours < 6) proximityScore += 0.5;
-      }
-      if (proximityScore > bestScore) {
-        bestScore = proximityScore;
-        bestEvent = ev;
-      }
+    const isMatch = (homeMatches && awayMatches) || (crossHomeMatches && crossAwayMatches);
+    if (!isMatch) continue;
+
+    // 3. MANDATORY DATE WINDOW VERIFICATION:
+    // Teams can play each other multiple times in a season (Cup, League, Champions League, etc.).
+    // Events separated by more than 36 hours are strictly DIFFERENT matches.
+    const timeDiffMs = Math.abs(betTime - ev.timestamp);
+    const diffHours = timeDiffMs / (3600 * 1000);
+    if (diffHours > 36) continue;
+
+    // 4. Status-Aware Sanity Guard:
+    // If the bet is for an upcoming match in the future (kickoff > nowMs + 15m),
+    // NEVER steal the result of an older finished match that concluded hours/days ago!
+    if (betTime > nowMs + 15 * 60 * 1000 && ev.isFinished && (nowMs - ev.timestamp > 12 * 3600 * 1000)) {
+      continue;
+    }
+
+    // 5. Select closest in time to scheduled kickoff
+    if (timeDiffMs < minTimeDiffMs) {
+      minTimeDiffMs = timeDiffMs;
+      bestEvent = {
+        ...ev,
+        matchedVerificationMethod: 'bilateral_teams_and_date',
+      };
     }
   }
 
@@ -450,6 +697,9 @@ export function evaluateBetFromEvent(bet: any, event: ScoreboardEvent): BetEvalu
       isMatchFinished: false,
       autoResolved: false,
       sourceBadge: 'ESPN Live Sportsbook',
+      verifiedEventId: event.id,
+      verifiedEventDate: event.dateKey || formatDateKey(event.timestamp),
+      auditVerificationMethod: event.matchedVerificationMethod || 'bilateral_teams_and_date',
     };
   }
 
@@ -463,6 +713,9 @@ export function evaluateBetFromEvent(bet: any, event: ScoreboardEvent): BetEvalu
       isMatchFinished: false,
       autoResolved: false,
       sourceBadge: 'ESPN In-Play Live',
+      verifiedEventId: event.id,
+      verifiedEventDate: event.dateKey || formatDateKey(event.timestamp),
+      auditVerificationMethod: event.matchedVerificationMethod || 'bilateral_teams_and_date',
     };
   }
 
@@ -615,6 +868,9 @@ export function evaluateBetFromEvent(bet: any, event: ScoreboardEvent): BetEvalu
     autoResolved: true,
     resolvedAt: Date.now(),
     sourceBadge: 'ESPN Sportsbook Score Officiel',
+    verifiedEventId: event.id,
+    verifiedEventDate: event.dateKey || formatDateKey(event.timestamp),
+    auditVerificationMethod: event.matchedVerificationMethod || 'bilateral_teams_and_date',
   };
 }
 
@@ -626,33 +882,45 @@ export async function resolveWithAIGroundedSearch(
   ai: GoogleGenAI,
   bet: any
 ): Promise<BetEvaluationResult | null> {
-  const prompt = `Recherche sur le web le résultat et le score officiel du match sportif suivant :
-- Sport : ${bet.sport || 'football'}
-- Match : ${bet.match}
-- Compétition / Ligue : ${bet.league || 'Ligue Professionnelle'}
-- Marché parié : "${bet.market}" (Cote : @${bet.odds})
-- Date approximative : ${new Date(bet.kickoffTimestamp || bet.createdAt).toLocaleDateString('fr-FR')}
+  const cleanMatch = cleanMatchTitle(bet?.match || '');
+  const { home: betHome, away: betAway } = extractTeamsFromBet(bet);
+  const betTime = extractBetTimestamp(bet);
+  const scheduledDateStr = new Date(betTime).toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: 'Europe/Paris',
+  });
 
-Instructions strictes :
-1. Recherche le score final officiel réel (sur Flashscore, Sofascore, Google Sports, ESPN ou site officiel).
-2. Si le match n'a pas encore eu lieu ou est en cours, indique "isMatchFinished": false, "status": "pending".
-3. Si le match est terminé, indique les scores exacts, le résultat et le statut réel du pari ('won' | 'lost' | 'void') selon la règle du marché.
+  const prompt = `Recherche sur le web le résultat et le score officiel du match sportif suivant :
+- Sport : ${bet?.sport || 'football'}
+- Match exact : ${cleanMatch}
+- Compétition / Ligue : ${bet?.league || 'Ligue Professionnelle'}
+- Marché parié : "${bet?.market}" (Cote : @${bet?.odds})
+- Date officielle de la rencontre : ${scheduledDateStr}
+
+RÈGLES CRITIQUES D'EXACTITUDE & ANTI-CONTAMINATION :
+1. Recherche le score réel officiel UNIQUEMENT pour la rencontre exacte "${cleanMatch}" disputée aux alentours du ${scheduledDateStr}.
+2. ❌ INTERDICTION FORMELLE d'attribuer le score d'un autre match, d'une autre confrontation passée ou d'une autre équipe !
+3. Si la rencontre "${cleanMatch}" n'a pas encore eu lieu, est reportée, ou est introuvable avec certitude absolue, renvoie obligatoirement "isMatchFinished": false, "status": "pending".
+4. Si et seulement si le match "${cleanMatch}" est réellement terminé à cette date, indique les scores exacts et le statut réel du pari ('won' | 'lost' | 'void').
 
 Retourne un JSON strict :
 {
   "isMatchFinished": boolean,
-  "homeTeam": "string",
-  "awayTeam": "string",
+  "matchDate": "YYYY-MM-DD (Date exacte à laquelle le match a été joué)",
+  "homeTeam": "nom exact de l'équipe à domicile",
+  "awayTeam": "nom exact de l'équipe à l'extérieur",
   "homeScore": number,
   "awayScore": number,
-  "finalScoreFormatted": "string (ex: Real Madrid 2 - 0 Dortmund)",
+  "finalScoreFormatted": "string (ex: Arsenal 2 - 1 Chelsea)",
   "status": "won" | "lost" | "void" | "pending",
   "resolutionNotes": "string (explication détaillée de la règle appliquée au score réel)"
 }`;
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.7-flash',
+      model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }],
@@ -677,21 +945,49 @@ Retourne un JSON strict :
         isMatchFinished: false,
         autoResolved: false,
         sourceBadge: 'Arbitrage Recherche Web Groundée',
+        auditVerificationMethod: 'unresolved_pending',
       };
     }
+
+    // CRITICAL Safeguard 1: Ensure BOTH participants match the bet (Anti-cross-contamination)
+    if (parsed.homeTeam && parsed.awayTeam && betHome && betAway) {
+      const homeMatchesDirect = isTeamMatch(parsed.homeTeam, betHome) && isTeamMatch(parsed.awayTeam, betAway);
+      const homeMatchesInverted = isTeamMatch(parsed.homeTeam, betAway) && isTeamMatch(parsed.awayTeam, betHome);
+
+      if (!homeMatchesDirect && !homeMatchesInverted) {
+        console.warn(`[SportsOracle] Grounded search rejected mismatched teams: Bet("${cleanMatch}") vs AI("${parsed.homeTeam} vs ${parsed.awayTeam}").`);
+        return null;
+      }
+    }
+
+    // CRITICAL Safeguard 2: Ensure the match date from AI matches the scheduled bet date within 48 hours
+    if (parsed.matchDate) {
+      const aiTimestamp = Date.parse(parsed.matchDate);
+      if (!isNaN(aiTimestamp)) {
+        const diffHours = Math.abs(betTime - aiTimestamp) / (3600 * 1000);
+        if (diffHours > 48) {
+          console.warn(`[SportsOracle] Grounded search rejected date mismatch: Bet date (${scheduledDateStr}) vs AI date (${parsed.matchDate}) diff ${diffHours.toFixed(1)}h.`);
+          return null;
+        }
+      }
+    }
+
+    const finalFormattedScore = parsed.finalScoreFormatted || `${parsed.homeTeam || ''} ${parsed.homeScore ?? 0} - ${parsed.awayScore ?? 0} ${parsed.awayTeam || ''} (Terminé)`;
 
     return {
       id: bet.id,
       status: parsed.status === 'won' ? 'won' : parsed.status === 'void' ? 'void' : 'lost',
-      finalScore: parsed.finalScoreFormatted || `${parsed.homeScore ?? ''} - ${parsed.awayScore ?? ''}`,
+      finalScore: finalFormattedScore,
       resolutionNotes: parsed.resolutionNotes || `Score officiel vérifié : ${parsed.homeScore ?? 0} - ${parsed.awayScore ?? 0}`,
       isMatchFinished: true,
       autoResolved: true,
       resolvedAt: Date.now(),
-      sourceBadge: 'Arbitrage Recherche Web Groundée',
+      sourceBadge: 'Google Search Arbitrage Groundé',
+      verifiedEventDate: parsed.matchDate || formatDateKey(betTime),
+      auditVerificationMethod: 'grounded_search_verified',
     };
   } catch (err) {
-    console.warn('[SportsOracle] Grounded search resolution failed for:', bet.match, err);
+    console.warn('[SportsOracle] Grounded search resolution failed for:', bet?.match, err);
     return null;
   }
 }

@@ -958,6 +958,19 @@ export const AiStakeAutoPilot: React.FC<AiStakeAutoPilotProps> = ({
                 <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
                   {isLive ? t('header.realBalance', 'Solde Réel') : t('header.balance', 'Balance')}
                 </span>
+                <button
+                  type="button"
+                  onClick={onOpenLicenseModal}
+                  className={`inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[8px] font-black uppercase tracking-wider transition ${
+                    licenseState?.isPro
+                      ? 'bg-amber-500 text-slate-950 shadow-xs'
+                      : 'bg-amber-500/90 text-slate-950 hover:bg-amber-400 cursor-pointer'
+                  }`}
+                  title={licenseState?.isPro ? 'VIP Actif' : 'Cliquer pour activer VIP'}
+                >
+                  <Crown className="w-2.5 h-2.5 text-slate-950 fill-current" />
+                  <span>VIP</span>
+                </button>
               </div>
               <Wallet className="w-3 h-3 text-slate-500" />
             </div>
@@ -1269,6 +1282,40 @@ export const AiStakeAutoPilot: React.FC<AiStakeAutoPilotProps> = ({
                       </div>
                       <span className="text-[10px] text-slate-400 font-mono shrink-0">
                         Base: {baseBetInput.toFixed(2)} {currency} ➔ Cible: {liveAutonomousDecision.calculatedBetAmount.toFixed(4)} {currency}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* LIVE STREAK INTELLIGENCE RADAR */}
+                  {liveAutonomousDecision.streakIntelligence && (
+                    <div className="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between flex-wrap gap-2 text-xs min-h-[30px]">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <span className="text-amber-400 font-bold text-[11px] flex items-center gap-1 shrink-0">
+                          ⚡ Radar Séries IA :
+                        </span>
+                        <span className={`px-2 py-0.5 rounded border font-mono font-bold text-[10px] flex items-center gap-1.5 truncate ${
+                          liveAutonomousDecision.streakIntelligence.color
+                        }`}>
+                          <span>{liveAutonomousDecision.streakIntelligence.label}</span>
+                          {liveAutonomousDecision.streakIntelligence.trailingProfitLocked > 0 && (
+                            <span className="text-emerald-300 bg-emerald-950/90 px-1 py-0.2 rounded border border-emerald-500/40 text-[9px]">
+                              🔒 +{liveAutonomousDecision.streakIntelligence.trailingProfitLocked.toFixed(2)} {currency} Scellé
+                            </span>
+                          )}
+                          {liveAutonomousDecision.streakIntelligence.spatialConditionInverted && (
+                            <span className="text-cyan-300 bg-cyan-950/90 px-1 py-0.2 rounded border border-cyan-500/40 text-[9px]">
+                              🔄 Inversion Over/Under
+                            </span>
+                          )}
+                          {liveAutonomousDecision.streakIntelligence.gameHoppingTriggered && (
+                            <span className="text-amber-300 bg-amber-950/90 px-1 py-0.2 rounded border border-amber-500/40 text-[9px]">
+                              🎲 Rotation Jeu
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-mono shrink-0 truncate max-w-[320px]">
+                        {liveAutonomousDecision.streakIntelligence.summaryAction}
                       </span>
                     </div>
                   )}
@@ -1813,7 +1860,93 @@ export const AiStakeAutoPilot: React.FC<AiStakeAutoPilotProps> = ({
                     </div>
                   </div>
 
-                {/* ADVANCED QUANTITATIVE DIAGNOSTIC SUITE */}
+                {/* ADVANCED STREAK INTELLIGENCE MATRIX (WIN & LOSS STREAKS) */}
+                <div className="p-3.5 rounded-2xl bg-slate-950 border border-teal-500/30 space-y-3 mt-3">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-teal-400" />
+                      <span className="text-xs font-bold text-white uppercase tracking-wide">
+                        Prise de Décision Séries IA : Victoires (Paroli Trailing) & Défaites (Coupe-Circuit)
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-teal-400 bg-teal-950/80 border border-teal-500/40">
+                      ⚡ Moteur Stochastique 4 Paliers
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* Loss Streak 4-Tier Defense */}
+                    <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+                      <label className="flex items-center justify-between cursor-pointer">
+                        <span className="text-xs font-bold text-rose-300 flex items-center gap-1.5">
+                          <span>🛡️ Défense Pertes 4 Paliers</span>
+                        </span>
+                        <input
+                          type="checkbox"
+                          checked={autonomousConfig.streakAdaptiveDefenseEnabled !== false}
+                          onChange={(e) => setAutonomousConfig(prev => ({ ...prev, streakAdaptiveDefenseEnabled: e.target.checked }))}
+                          className="w-4 h-4 rounded text-rose-500 bg-slate-950 border-slate-700 cursor-pointer"
+                        />
+                      </label>
+                      <p className="text-[10px] text-slate-400 leading-relaxed">
+                        À 2-3 pertes : pivot vers haute probabilité (68-80%). À 4-5 pertes : coupe-circuit total et reset de sécurité à la mise de base.
+                      </p>
+                      <div className="flex items-center gap-1 text-[9px] font-mono text-slate-400 flex-wrap pt-1">
+                        <span className="px-1.5 py-0.5 rounded bg-blue-950/60 border border-blue-500/30 text-blue-300">P1 Absorpt.</span>
+                        <span className="px-1.5 py-0.5 rounded bg-emerald-950/60 border border-emerald-500/30 text-emerald-300">P2 Pivot ~75%</span>
+                        <span className="px-1.5 py-0.5 rounded bg-amber-950/60 border border-amber-500/30 text-amber-300">P3 Coupe-Circuit</span>
+                        <span className="px-1.5 py-0.5 rounded bg-rose-950/60 border border-rose-500/30 text-rose-300">P4 Havre -50%</span>
+                      </div>
+                    </div>
+
+                    {/* Win Streak Paroli Trailing Vault */}
+                    <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+                      <label className="flex items-center justify-between cursor-pointer">
+                        <span className="text-xs font-bold text-teal-300 flex items-center gap-1.5">
+                          <span>💰 Coffre Paroli Trailing</span>
+                        </span>
+                        <input
+                          type="checkbox"
+                          checked={autonomousConfig.streakParoliVaultEnabled !== false}
+                          onChange={(e) => setAutonomousConfig(prev => ({ ...prev, streakParoliVaultEnabled: e.target.checked }))}
+                          className="w-4 h-4 rounded text-teal-500 bg-slate-950 border-slate-700 cursor-pointer"
+                        />
+                      </label>
+                      <p className="text-[10px] text-slate-400 leading-relaxed">
+                        Sanctuaire automatique : verrouille 65% des gains de série au palier 2, 80% au palier 3, et 100% au palier 4 en clouant les bénéfices au solde.
+                      </p>
+                      <div className="flex items-center gap-1 text-[9px] font-mono text-slate-400 flex-wrap pt-1">
+                        <span className="px-1.5 py-0.5 rounded bg-amber-950/60 border border-amber-500/30 text-amber-300">P1 Momentum</span>
+                        <span className="px-1.5 py-0.5 rounded bg-teal-950/60 border border-teal-500/30 text-teal-300">P2 Lock 65%</span>
+                        <span className="px-1.5 py-0.5 rounded bg-purple-950/60 border border-purple-500/30 text-purple-300">P3 Alpha 80%</span>
+                        <span className="px-1.5 py-0.5 rounded bg-amber-950/60 border border-amber-500/40 text-amber-300">P4 Climax 100%</span>
+                      </div>
+                    </div>
+
+                    {/* Spatial Condition Inversion */}
+                    <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+                      <label className="flex items-center justify-between cursor-pointer">
+                        <span className="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
+                          <span>🔄 Inversion Spatiale Dice</span>
+                        </span>
+                        <input
+                          type="checkbox"
+                          checked={autonomousConfig.streakDiceInversionEnabled !== false}
+                          onChange={(e) => setAutonomousConfig(prev => ({ ...prev, streakDiceInversionEnabled: e.target.checked }))}
+                          className="w-4 h-4 rounded text-cyan-500 bg-slate-950 border-slate-700 cursor-pointer"
+                        />
+                      </label>
+                      <p className="text-[10px] text-slate-400 leading-relaxed">
+                        Inverse instantanément la direction Over ➔ Under sur Dice lors des séries de pertes pour déjouer l'anti-persistance et le clustering spatial du PRNG.
+                      </p>
+                      <div className="pt-1">
+                        <span className="px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 font-mono text-[9px]">
+                          Bascule Over &lt;=&gt; Under en temps réel
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 {liveAutonomousDecision.quantitativeMetrics && (
                   <div className="p-3.5 rounded-2xl bg-slate-950 border border-indigo-900/40 space-y-3.5">
                     <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-800 pb-2">

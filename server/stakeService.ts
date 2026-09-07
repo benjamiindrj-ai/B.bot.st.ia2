@@ -2518,27 +2518,23 @@ export class StakeSportsService {
       const preOdds = Number(Math.max(1.30, liveOdds - 0.18).toFixed(2));
       const evVal = Number((10.4 + ((idx * 7) % 25) * 0.2).toFixed(1));
 
-      // Generated realistic in-play score & running clock if feed clock is empty
-      const defaultMinutes = [54, 67, 78, 38];
-      const defaultScores = ['1 - 0', '2 - 1', '1 - 1', '0 - 1'];
-      const simMinute = defaultMinutes[idx % defaultMinutes.length];
-      const simScore = defaultScores[idx % defaultScores.length];
-
-      const displayScore = (isTrulyLive && ev.score && ev.score !== '0 - 0')
-        ? ev.score 
-        : (isFb ? simScore : isBk ? '82 - 76' : isTn ? '6-4, 3-2' : isMma ? 'Round 2' : isHk ? '2 - 1' : '1 - 0 (Map 2)');
+      // Respect authentic real in-play score and running clock from feeds
+      const scoreStr = ev.score !== undefined && ev.score !== null ? String(ev.score).trim() : '';
+      const displayScore = scoreStr !== ''
+        ? scoreStr 
+        : (isBk ? '0 - 0' : isTn ? '0-0' : isMma ? 'En cours' : isHk ? '0 - 0' : '0 - 0');
       
-      const displayMinute = (isTrulyLive && ev.clock && ev.clock !== "0'")
-        ? ev.clock 
-        : (isFb ? `${simMinute}'` : isBk ? 'Q3 04:12' : isTn ? '2ème Set' : isMma ? 'Round 2 02:45' : isHk ? 'P2 11:30' : 'Map 2 (R14)');
+      const clockStr = ev.clock !== undefined && ev.clock !== null ? String(ev.clock).trim() : '';
+      const displayMinute = (clockStr !== '' && clockStr !== "0'")
+        ? clockStr 
+        : (isFb ? 'Direct' : isBk ? 'Direct' : isTn ? 'En cours' : isMma ? 'En cours' : isHk ? 'Direct' : 'Direct');
 
-      const displayPeriod = (isTrulyLive && ev.period)
-        ? ev.period
-        : (isFb ? (simMinute > 45 ? '2ème Mi-Temps' : '1ère Mi-Temps') : isBk ? '3ème Quart-Temps' : isTn ? '2ème Set' : isMma ? 'Round 2' : isHk ? '2ème Tiers' : 'En cours');
+      const periodStr = ev.period !== undefined && ev.period !== null ? String(ev.period).trim() : '';
+      const displayPeriod = periodStr !== ''
+        ? periodStr
+        : 'En direct';
 
-      const elapsedMins = isTrulyLive 
-        ? (parseInt(String(ev.clock || '').replace(/[^0-9]/g, ''), 10) || simMinute) 
-        : simMinute;
+      const elapsedMins = parseInt(String(ev.clock || '').replace(/[^0-9]/g, ''), 10) || 15;
 
       // Build coherent sport-specific tactical metrics & reasoning
       let dynamicMetrics: Array<{ label: string; value: string; color?: 'white' | 'cyan' | 'emerald' | 'amber' | 'rose' | 'indigo' }> = [];

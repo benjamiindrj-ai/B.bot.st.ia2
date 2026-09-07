@@ -85,8 +85,25 @@ export const getSportBadgeConfig = (sportId: string) => {
 
 interface BetAccuracyTrackerProps {
   trackedBets: TrackedSportBet[];
-  onUpdateStatus: (id: string, status: 'won' | 'lost' | 'void' | 'pending', finalScore?: string, notes?: string) => void;
-  onBatchUpdateStatus?: (updates: Array<{ id: string; status: 'won' | 'lost' | 'void' | 'pending'; finalScore?: string; resolutionNotes?: string; autoResolved?: boolean }>) => void;
+  onUpdateStatus: (
+    id: string, 
+    status: 'won' | 'lost' | 'void' | 'pending', 
+    finalScore?: string, 
+    notes?: string,
+    verifiedEventId?: string,
+    verifiedEventDate?: string,
+    auditVerificationMethod?: 'event_id_exact' | 'bilateral_teams_and_date' | 'grounded_search_verified' | 'unresolved_pending'
+  ) => void;
+  onBatchUpdateStatus?: (updates: Array<{ 
+    id: string; 
+    status: 'won' | 'lost' | 'void' | 'pending'; 
+    finalScore?: string; 
+    resolutionNotes?: string; 
+    autoResolved?: boolean;
+    verifiedEventId?: string;
+    verifiedEventDate?: string;
+    auditVerificationMethod?: 'event_id_exact' | 'bilateral_teams_and_date' | 'grounded_search_verified' | 'unresolved_pending';
+  }>) => void;
   onUpdateStake?: (id: string, stakePercent: number, stakeAmount: number) => void;
   onDeleteBet: (id: string) => void;
   onClearAll: () => void;
@@ -328,7 +345,15 @@ export const BetAccuracyTracker: React.FC<BetAccuracyTrackerProps> = ({
         } else {
           resolvedList.forEach((item: any) => {
             if (item.status && item.status !== 'pending') {
-              onUpdateStatus(item.id, item.status, item.finalScore, item.resolutionNotes);
+              onUpdateStatus(
+                item.id, 
+                item.status, 
+                item.finalScore, 
+                item.resolutionNotes,
+                item.verifiedEventId,
+                item.verifiedEventDate,
+                item.auditVerificationMethod
+              );
             }
           });
         }
@@ -416,29 +441,16 @@ export const BetAccuracyTracker: React.FC<BetAccuracyTrackerProps> = ({
               <span>{isSyncing ? 'Récupération...' : `Vérifier les Scores (${pendingBets.length} en attente)`}</span>
             </button>
 
-            {/* Re-audit all bets button (to fix any previously skewed scores) */}
+            {/* Re-audit all bets button (to fix any previously skewed or mismatched scores) */}
             {trackedBets.length > 0 && (
               <button
                 onClick={() => handleResolveResults(false, undefined, true)}
                 disabled={isSyncing}
-                title="Interroge les flux officiels ESPN pour vérifier et corriger tous les scores et recalculer fidèlement le bilan"
-                className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 hover:text-cyan-200 border border-cyan-500/30 text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
+                title="Interroge les flux officiels ESPN pour vérifier et corriger tous les scores, éliminer les scores d'autres matchs et recalculer fidèlement le bilan"
+                className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 hover:text-cyan-200 border border-cyan-500/40 text-xs font-bold shadow-sm transition flex items-center gap-1.5 active:scale-95"
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Ré-auditer tout le bilan (ESPN)</span>
-              </button>
-            )}
-
-            {/* Fast Simulation / Test Clôture Button */}
-            {pendingBets.length > 0 && (
-              <button
-                onClick={() => handleResolveResults(true)}
-                disabled={isSyncing}
-                title="Clôture immédiatement les matchs en attente avec des scores réalistes pour auditer le bilan sans attendre"
-                className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-amber-200 border border-amber-500/30 text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
-              >
-                <Zap className="w-3.5 h-3.5 text-amber-400" />
-                <span>Simuler Clôture Immédiate</span>
+                <span>Auditer & Corriger les scores</span>
               </button>
             )}
 
@@ -1073,17 +1085,17 @@ export const BetAccuracyTracker: React.FC<BetAccuracyTrackerProps> = ({
                   </div>
 
                   {/* Score & Notes Display */}
-                  {(bet.finalScore || bet.resolutionNotes) && (
+                  {(bet.finalScore || bet.resolutionNotes || bet.auditVerificationMethod) && (
                     <motion.div 
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="text-xs text-slate-300 bg-slate-950/50 p-2.5 rounded-xl border border-slate-800/80 space-y-1"
+                      className="text-xs text-slate-300 bg-slate-950/50 p-2.5 rounded-xl border border-slate-800/80 space-y-1.5"
                     >
                       {bet.finalScore && (
                         <div className="flex items-center justify-between font-semibold">
-                          <span className="flex items-center gap-1.5">
+                          <span className="flex items-center gap-1.5 flex-wrap">
                             <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400" />
-                            <span>Score final : <strong className="text-white">{bet.finalScore}</strong></span>
+                            <span>Score officiel : <strong className="text-white">{bet.finalScore}</strong></span>
                           </span>
                           <button
                             onClick={() => {
@@ -1091,12 +1103,46 @@ export const BetAccuracyTracker: React.FC<BetAccuracyTrackerProps> = ({
                               setTempScore(bet.finalScore || '');
                               setTempNotes(bet.resolutionNotes || '');
                             }}
-                            className="text-[10px] text-blue-400 hover:underline"
+                            className="text-[10px] text-blue-400 hover:underline shrink-0 ml-2"
                           >
                             Modifier
                           </button>
                         </div>
                       )}
+
+                      {/* Verification Audit Badge */}
+                      {bet.auditVerificationMethod && (
+                        <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                          {bet.auditVerificationMethod === 'event_id_exact' && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                              <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                              <span>Match certifié par ID Officiel{bet.verifiedEventId ? ` (${bet.verifiedEventId.replace(/^(football|basketball|tennis|mma|hockey|esports)-/, '').slice(-8)})` : ''}</span>
+                              {bet.verifiedEventDate && <span className="opacity-75">• {bet.verifiedEventDate}</span>}
+                            </span>
+                          )}
+                          {bet.auditVerificationMethod === 'bilateral_teams_and_date' && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-300 border border-blue-500/20">
+                              <ShieldCheck className="w-3 h-3 text-blue-400" />
+                              <span>Confrontation & Date confirmées</span>
+                              {bet.verifiedEventDate && <span className="opacity-75">• {bet.verifiedEventDate}</span>}
+                            </span>
+                          )}
+                          {bet.auditVerificationMethod === 'grounded_search_verified' && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                              <Search className="w-3 h-3 text-purple-400" />
+                              <span>Audit Web & Date vérifiée</span>
+                              {bet.verifiedEventDate && <span className="opacity-75">• {bet.verifiedEventDate}</span>}
+                            </span>
+                          )}
+                          {bet.auditVerificationMethod === 'unresolved_pending' && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-800/80 text-slate-400 border border-slate-700/60">
+                              <Clock className="w-3 h-3 text-amber-400" />
+                              <span>En attente de consolidation officielle</span>
+                            </span>
+                          )}
+                        </div>
+                      )}
+
                       {bet.resolutionNotes && (
                         <div className="text-[11px] text-slate-400 pl-5">
                           💡 {bet.resolutionNotes}
@@ -1172,7 +1218,7 @@ export const BetAccuracyTracker: React.FC<BetAccuracyTrackerProps> = ({
                       
                       {/* Check Button for Bet (Pending or Re-verify) */}
                       <button
-                        onClick={() => handleResolveResults(true, bet.id)}
+                        onClick={() => handleResolveResults(false, bet.id, true)}
                         disabled={isSingleResolving}
                         title="Interroge le flux officiel ESPN pour vérifier le score exact et clôturer ce pari"
                         className="px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 hover:bg-indigo-600/50 disabled:opacity-50"

@@ -4,7 +4,6 @@ import { Header, AppTab } from './components/Header';
 import { StrategyGenerator } from './components/StrategyGenerator';
 import { AutoBetEngine } from './components/AutoBetEngine';
 import { AnalyticsDashboard } from './components/AnalyticsDashboard';
-import { ScriptExporter } from './components/ScriptExporter';
 import { StakeApiSettingsModal } from './components/StakeApiSettingsModal';
 import { ManualSessionTracker } from './components/ManualSessionTracker';
 import { AdvancedGamesSuite } from './components/AdvancedGamesSuite';
@@ -449,7 +448,10 @@ export default function App() {
     id: string, 
     status: 'won' | 'lost' | 'void' | 'pending', 
     finalScore?: string,
-    notes?: string
+    notes?: string,
+    verifiedEventId?: string,
+    verifiedEventDate?: string,
+    auditVerificationMethod?: 'event_id_exact' | 'bilateral_teams_and_date' | 'grounded_search_verified' | 'unresolved_pending'
   ) => {
     setTrackedSportBets((prev) =>
       prev.map((bet) => {
@@ -467,6 +469,9 @@ export default function App() {
           resolvedAt: status !== 'pending' ? Date.now() : undefined,
           finalScore: finalScore !== undefined ? finalScore : bet.finalScore,
           resolutionNotes: notes !== undefined ? notes : bet.resolutionNotes,
+          verifiedEventId: verifiedEventId !== undefined ? verifiedEventId : bet.verifiedEventId,
+          verifiedEventDate: verifiedEventDate !== undefined ? verifiedEventDate : bet.verifiedEventDate,
+          auditVerificationMethod: auditVerificationMethod !== undefined ? auditVerificationMethod : bet.auditVerificationMethod,
         };
       })
     );
@@ -479,6 +484,9 @@ export default function App() {
       finalScore?: string;
       resolutionNotes?: string;
       autoResolved?: boolean;
+      verifiedEventId?: string;
+      verifiedEventDate?: string;
+      auditVerificationMethod?: 'event_id_exact' | 'bilateral_teams_and_date' | 'grounded_search_verified' | 'unresolved_pending';
     }>
   ) => {
     setTrackedSportBets((prev) =>
@@ -500,6 +508,9 @@ export default function App() {
           resolutionNotes: update.resolutionNotes !== undefined ? update.resolutionNotes : bet.resolutionNotes,
           autoResolved: update.autoResolved !== undefined ? update.autoResolved : true,
           lastCheckedAt: Date.now(),
+          verifiedEventId: update.verifiedEventId !== undefined ? update.verifiedEventId : bet.verifiedEventId,
+          verifiedEventDate: update.verifiedEventDate !== undefined ? update.verifiedEventDate : bet.verifiedEventDate,
+          auditVerificationMethod: update.auditVerificationMethod !== undefined ? update.auditVerificationMethod : bet.auditVerificationMethod,
         };
       })
     );
@@ -2184,16 +2195,7 @@ export default function App() {
               />
             )}
 
-            {/* Tab 8: Standalone Script Exporter */}
-            {activeTab === 'scripts' && (
-              <ScriptExporter
-                strategy={currentStrategy}
-                credentials={credentials}
-                currency={currency}
-              />
-            )}
-
-            {/* Tab 9: Application Settings & Preferences */}
+            {/* Tab 8: Application Settings & Preferences */}
             {activeTab === 'settings' && (
               <AppSettingsView
                 settings={settings}
@@ -2348,7 +2350,7 @@ export default function App() {
           whileTap={{ scale: 0.92 }}
           onClick={() => setIsMobileMoreDrawerOpen(!isMobileMoreDrawerOpen)}
           className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all min-w-[56px] cursor-pointer ${
-            isMobileMoreDrawerOpen || ['advanced-games', 'cloud-sync', 'scripts', 'seed-analysis', 'settings', 'analytics', 'backtesting'].includes(activeTab)
+            isMobileMoreDrawerOpen || ['advanced-games', 'cloud-sync', 'seed-analysis', 'settings', 'analytics', 'backtesting'].includes(activeTab)
               ? 'text-indigo-400 font-bold'
               : 'text-slate-400 hover:text-slate-200'
           }`}
@@ -2437,24 +2439,6 @@ export default function App() {
                 <div className="min-w-0">
                   <div className="text-xs font-bold truncate">{t('nav.cloud', 'Cloud & Profils')}</div>
                   <div className="text-[10px] text-slate-400 truncate">Sauvegardes multi-comptes</div>
-                </div>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveTab('scripts');
-                  setIsMobileMoreDrawerOpen(false);
-                }}
-                className={`p-3 rounded-2xl border text-left flex items-center gap-2.5 transition ${
-                  activeTab === 'scripts'
-                    ? 'bg-rose-950/60 border-rose-500/50 text-white'
-                    : 'bg-slate-950/80 border-slate-800 text-slate-300'
-                }`}
-              >
-                <Sparkles className="w-5 h-5 text-rose-400 flex-shrink-0" />
-                <div className="min-w-0">
-                  <div className="text-xs font-bold truncate">{t('nav.scripts', 'Scripts & Export')}</div>
-                  <div className="text-[10px] text-slate-400 truncate">Python & Tampermonkey</div>
                 </div>
               </button>
 

@@ -9,10 +9,20 @@ import {
   findMatchingScoreboardEvent,
   evaluateBetFromEvent,
   resolveWithAIGroundedSearch,
+  cleanMatchTitle,
+  isTeamMatch,
+  formatDateKey,
   BetEvaluationResult,
 } from './server/sportsOracleResolver.js';
 import { runBayesianSportsRegression } from './server/bayesianSportsRegression.js';
-import { verifyLicenseKey, generateNewLicenseKey } from './server/licenseService.js';
+import { 
+  verifyLicenseKey, 
+  generateNewLicenseKey, 
+  getManagedLicenses, 
+  addManagedLicense, 
+  updateManagedLicense, 
+  deleteManagedLicense 
+} from './server/licenseService.js';
 
 // Lazy / Safe initialization of GoogleGenAI
 function getGeminiClient(): GoogleGenAI | null {
@@ -453,31 +463,42 @@ function enrichTipWithStakeMarkets(tip: any, realEvents: RealSportEvent[], nowMs
   const cleanStr = (s: string) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   const tipMatchClean = cleanStr(tip.match);
   
-  // 1. Find matching real event by participant names
+  // 1. Find matching real event strictly by participant names
   let matchedEv = realEvents.find((e) => {
     const evMatchClean = cleanStr(e.match);
     const homeClean = cleanStr(e.homeTeam);
     const awayClean = cleanStr(e.awayTeam);
     return (
       (homeClean && awayClean && tipMatchClean.includes(homeClean) && tipMatchClean.includes(awayClean)) ||
-      evMatchClean.includes(tipMatchClean) || 
-      tipMatchClean.includes(evMatchClean)
+      (homeClean && awayClean && isTeamMatch(homeClean, tip.match) && isTeamMatch(awayClean, tip.match)) ||
+      (evMatchClean && tipMatchClean && (evMatchClean.includes(tipMatchClean) || tipMatchClean.includes(evMatchClean)))
     );
   });
 
-  // 2. If no direct match by name, select an active real fixture from the same sport
+  // CRITICAL ANTI-CONTAMINATION FIX:
+  // If participants don't match, NEVER link to an arbitrary fixture of another team!
+  // Instead, treat the tip itself as the authoritative fixture definition.
   if (!matchedEv) {
-    matchedEv = realEvents.find((e) => e.sport === tip.sport && !e.isFinished && (e.isUpcoming || e.isLive));
-  }
-
-  // 3. If still no match, select any active upcoming real fixture from the real events feed
-  if (!matchedEv && realEvents.length > 0) {
-    matchedEv = realEvents.find((e) => !e.isFinished && (e.isUpcoming || e.isLive)) || realEvents[0];
-  }
-
-  // If no real events exist in feed, strictly return null to prevent fictitious matches
-  if (!matchedEv) {
-    return null;
+    const delimRegex = /\s+(?:vs\.?|v\.?|–|—|-|\/|contre|@|at)\s+/i;
+    const parts = (tip.match || '').split(delimRegex);
+    const home = parts[0]?.trim() || tip.homeTeam || 'Équipe 1';
+    const away = parts[1]?.trim() || tip.awayTeam || 'Équipe 2';
+    matchedEv = {
+      id: `tip-fixture-${tip.id || slugifyStake(tip.match || 'match')}`,
+      sport: (tip.sport || 'football') as any,
+      match: tip.match || `${home} vs ${away}`,
+      homeTeam: home,
+      awayTeam: away,
+      league: tip.league || 'Compétition Officielle',
+      date: new Date(tip.kickoffTimestamp || nowMs + 3600 * 1000).toISOString(),
+      timestamp: tip.kickoffTimestamp || nowMs + 3600 * 1000,
+      isUpcoming: true,
+      isLive: false,
+      isFinished: false,
+      statusDetail: 'À venir',
+      score: '0 - 0',
+      clock: 'À venir',
+    };
   }
 
   const stakeFixture = generateStakeMarketsForEvent(matchedEv, 0, nowMs);
@@ -2841,8 +2862,37 @@ Réponds EXCLUSIVEMENT sous forme d'un objet JSON strict respectant exactement c
       let pendingCount = 0;
 
       for (const bet of bets) {
-        // If already resolved and not forcing re-audit, keep current result
-        if (bet.status !== 'pending' && !forceResolve) {
+        // Detect if an existing bet score was corrupted from another match
+        // (e.g. finalScore mentions team names that don't match bet.match at all)
+        let isCorruptedScore = false;
+        const cleanM = cleanMatchTitle(bet.match || '');
+
+        if (bet.finalScore && typeof bet.finalScore === 'string') {
+          const scoreText = bet.finalScore;
+          // Strip status words to extract team names
+          const scoreWords = scoreText
+            .replace(/\b(Score|Terminé|validé|Pari|Direct|Prévu|Match|Score vérifié|\d+|-|:|\(|\)|\[|\])\b/gi, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+          if (scoreWords.length >= 4) {
+            const teamsInScore = scoreWords.split(/\s+(?:vs\.?|–|-|\/)\s+/i);
+            if (teamsInScore.length >= 2) {
+              const team1 = teamsInScore[0].trim();
+              const team2 = teamsInScore[1].trim();
+              const team1Matches = isTeamMatch(team1, cleanM);
+              const team2Matches = isTeamMatch(team2, cleanM);
+              // If both extracted teams do NOT match the bet match title, it was stolen from another match
+              if (!team1Matches && !team2Matches) {
+                isCorruptedScore = true;
+                console.warn(`[SportsOracle] Detected stolen score "${bet.finalScore}" for bet "${bet.match}". Purging.`);
+              }
+            }
+          }
+        }
+
+        // If already resolved, not forcing re-audit, and score is NOT corrupted, preserve result
+        if (bet.status !== 'pending' && !forceResolve && !isCorruptedScore) {
           resolvedBets.push({
             id: bet.id,
             status: bet.status,
@@ -2852,6 +2902,9 @@ Réponds EXCLUSIVEMENT sous forme d'un objet JSON strict respectant exactement c
             autoResolved: bet.autoResolved ?? true,
             resolvedAt: bet.resolvedAt || nowMs,
             sourceBadge: bet.sourceBadge || 'Bilan Confirmé',
+            verifiedEventId: bet.verifiedEventId,
+            verifiedEventDate: bet.verifiedEventDate,
+            auditVerificationMethod: bet.auditVerificationMethod || 'bilateral_teams_and_date',
           });
           if (bet.status === 'won') wonCount++;
           else if (bet.status === 'lost') lostCount++;
@@ -2859,7 +2912,7 @@ Réponds EXCLUSIVEMENT sous forme d'un objet JSON strict respectant exactement c
           continue;
         }
 
-        // Try to find matching real event in official scoreboards
+        // 1. Try to find matching real event in official scoreboards (ESPN feeds)
         const matchedEvent = findMatchingScoreboardEvent(bet, scoreboards);
 
         if (matchedEvent) {
@@ -2873,15 +2926,15 @@ Réponds EXCLUSIVEMENT sous forme d'un objet JSON strict respectant exactement c
           continue;
         }
 
-        // Event not found in standard feeds: check match time
+        // 2. Event not found in standard feeds: check match time
         const kickoff = bet.kickoffTimestamp || (bet.createdAt + 60 * 60 * 1000);
-        const isPastMatchTime = nowMs >= kickoff + 2.5 * 3600 * 1000;
+        const isPastMatchTime = nowMs >= kickoff + 2 * 3600 * 1000;
 
-        // If match took place in the past and AI with web grounding is available, search web for verified real score
+        // If match took place in the past and AI search is available, search web for verified real score
         if (isPastMatchTime && ai) {
           try {
             const groundedResult = await resolveWithAIGroundedSearch(ai, bet);
-            if (groundedResult) {
+            if (groundedResult && groundedResult.isMatchFinished) {
               resolvedBets.push(groundedResult);
               if (groundedResult.status === 'won') wonCount++;
               else if (groundedResult.status === 'lost') lostCount++;
@@ -2894,87 +2947,29 @@ Réponds EXCLUSIVEMENT sous forme d'un objet JSON strict respectant exactement c
           }
         }
 
-        // If forceResolve is requested by user on an unlisted match: evaluate deterministically with unbiased probability
-        if (forceResolve) {
-          // Compute true implied probability from market odds
-          const odds = typeof bet.odds === 'number' && bet.odds > 1 ? bet.odds : 2.0;
-          const impliedWinProb = 1 / odds;
-          // Deterministic hash based on bet match + id + market
-          const hashSeed = `${bet.id}-${bet.match}-${bet.market}`.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-          const pseudoRand = (Math.sin(hashSeed) + 1) / 2; // 0.0 - 1.0
-          const won = pseudoRand < impliedWinProb;
-
-          let finalScore = '';
-          let notes = '';
-          const marketLower = (bet.market || '').toLowerCase();
-
-          if (bet.sport === 'football') {
-            if (won) {
-              if (marketLower.includes('btts') || marketLower.includes('les deux')) {
-                finalScore = '2 - 1 (Score vérifié)';
-                notes = 'Les 2 équipes ont marqué. Pari validé conforme.';
-              } else if (marketLower.includes('plus de 2.5') || marketLower.includes('over 2.5')) {
-                finalScore = '3 - 1 (Score vérifié)';
-                notes = 'Total de 4 buts marqués (> 2.5). Pari validé.';
-              } else if (marketLower.includes('moins de 2.5') || marketLower.includes('under 2.5')) {
-                finalScore = '1 - 0 (Score vérifié)';
-                notes = 'Total de 1 but marqué (< 2.5). Pari validé.';
-              } else {
-                finalScore = '2 - 0 (Score vérifié)';
-                notes = 'Résultat conforme à la sélection.';
-              }
-            } else {
-              if (marketLower.includes('btts') || marketLower.includes('les deux')) {
-                finalScore = '1 - 0 (Score vérifié)';
-                notes = 'Une seule équipe a marqué. Pari non validé.';
-              } else if (marketLower.includes('plus de 2.5') || marketLower.includes('over 2.5')) {
-                finalScore = '1 - 1 (Score vérifié)';
-                notes = 'Total de 2 buts marqués (Inférieur à 2.5). Pari non validé.';
-              } else {
-                finalScore = '0 - 1 (Score vérifié)';
-                notes = 'Scénario défavorable.';
-              }
-            }
-          } else if (bet.sport === 'basketball') {
-            finalScore = won ? '114 - 108 (Total 222 pts)' : '102 - 98 (Total 200 pts)';
-            notes = won ? 'Total et écart conformes à la sélection.' : 'Écart insuffisant par rapport à la ligne.';
-          } else if (bet.sport === 'tennis') {
-            finalScore = won ? '6-4, 7-5 (Terminé)' : '4-6, 6-7 (Terminé)';
-            notes = won ? 'Victoire nette en 2 sets.' : 'Défaite.';
-          } else {
-            finalScore = won ? 'Score vérifié 3 - 1' : 'Score vérifié 0 - 2';
-            notes = won ? 'Résultat validé avec succès.' : 'Résultat non concluant.';
-          }
-
-          resolvedBets.push({
-            id: bet.id,
-            status: won ? 'won' : 'lost',
-            finalScore: `${bet.match} : ${finalScore}`,
-            resolutionNotes: notes,
-            isMatchFinished: true,
-            autoResolved: true,
-            resolvedAt: nowMs,
-            sourceBadge: 'Clôture Arbitrée & Modèle Statistique',
-          });
-          if (won) wonCount++;
-          else lostCount++;
-          continue;
-        }
-
-        // Default: match is still upcoming or score pending consolidation
+        // 3. Match is NOT found or score not yet confirmed:
+        // STRICT DIRECTIVE: NEVER fabricate fake scores or borrow scores from other fixtures!
         const formattedDate = new Date(kickoff).toLocaleTimeString('fr-FR', {
           hour: '2-digit',
           minute: '2-digit',
           timeZone: 'Europe/Paris',
         });
+
         resolvedBets.push({
           id: bet.id,
           status: 'pending',
-          finalScore: bet.finalScore || 'À venir',
-          resolutionNotes: `Match à venir ou en cours d'arbitrage officiel. Coup d'envoi prévu à ~${formattedDate} (Paris).`,
+          finalScore: isCorruptedScore ? 'Score réinitialisé (en attente)' : (bet.status === 'pending' ? (bet.finalScore || 'À venir') : 'En attente'),
+          resolutionNotes: isCorruptedScore
+            ? 'Score précédemment erroné d’un autre match corrigé et réinitialisé. En attente du score officiel réel.'
+            : (nowMs < kickoff
+                ? `Match programmé. Coup d'envoi officiel prévu à ~${formattedDate} (Paris).`
+                : `Score non encore consolidé dans les flux officiels. En attente de validation officielle (aucun score simulé).`),
           isMatchFinished: false,
           autoResolved: false,
-          sourceBadge: 'En Attente de Score',
+          sourceBadge: 'En Attente de Score Officiel',
+          verifiedEventId: bet.stakeFixtureId || undefined,
+          verifiedEventDate: bet.verifiedEventDate || formatDateKey(kickoff),
+          auditVerificationMethod: 'unresolved_pending',
         });
         pendingCount++;
       }
@@ -4101,22 +4096,115 @@ Fournis une réponse claire, complète et directement utile pour guider l'utilis
 
   app.post('/api/license/generate', express.json(), async (req, res) => {
     try {
-      const { adminKey, plan, clientNote } = req.body || {};
+      const { adminKey, plan, clientNote, username, customDays } = req.body || {};
       const adminCheck = verifyLicenseKey(adminKey);
 
       if (!adminCheck.valid || !adminCheck.isAdmin) {
         return res.status(403).json({ error: 'Accès refusé : clé administrateur requise.' });
       }
 
-      const generated = generateNewLicenseKey(plan || 'vip_monthly', clientNote || 'client');
+      const clientUsername = username || clientNote || 'Client VIP';
+      const generated = generateNewLicenseKey(plan || 'vip_monthly', clientUsername, customDays ? Number(customDays) : undefined);
       res.json({
         ok: true,
         generated,
-        message: 'Nouvelle clé de licence générée avec succès.',
+        message: `Nouvelle clé VIP générée pour ${clientUsername} avec succès.`,
       });
     } catch (err: any) {
       console.error('License generation error:', err);
       res.status(500).json({ error: err.message || 'Erreur lors de la génération de la clé' });
+    }
+  });
+
+  // Admin: Get all active & managed VIP keys
+  app.get('/api/license/admin/keys', (req, res) => {
+    try {
+      const adminKey = req.headers['x-admin-key'] as string || req.query.adminKey as string;
+      const adminCheck = verifyLicenseKey(adminKey);
+      if (!adminCheck.valid || !adminCheck.isAdmin) {
+        return res.status(403).json({ error: 'Accès refusé : clé administrateur requise.' });
+      }
+
+      const keys = getManagedLicenses();
+      res.json({ ok: true, keys });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Admin: Add or manually register a license key with a custom username
+  app.post('/api/license/admin/keys', express.json(), (req, res) => {
+    try {
+      const { adminKey, key, username, plan, planName, durationDays, expiresAt, status, notes } = req.body || {};
+      const adminCheck = verifyLicenseKey(adminKey);
+      if (!adminCheck.valid || !adminCheck.isAdmin) {
+        return res.status(403).json({ error: 'Accès refusé : clé administrateur requise.' });
+      }
+
+      if (!key || !username) {
+        return res.status(400).json({ error: 'La clé et le nom d\'utilisateur sont requis.' });
+      }
+
+      let calculatedExpiresAt: number | null = expiresAt ?? null;
+      if (durationDays && !expiresAt) {
+        calculatedExpiresAt = Date.now() + Number(durationDays) * 86400000;
+      }
+
+      const record = addManagedLicense({
+        key,
+        username,
+        plan: plan || 'vip_monthly',
+        planName: planName || 'VIP Pro',
+        expiresAt: calculatedExpiresAt,
+        status: status || 'active',
+        notes: notes || 'Enregistré manuellement par l\'administrateur',
+      });
+
+      res.json({ ok: true, record, message: 'Clé enregistrée avec succès.' });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Admin: Update key username or status
+  app.put('/api/license/admin/keys/:id', express.json(), (req, res) => {
+    try {
+      const { adminKey, username, status, notes, planName } = req.body || {};
+      const adminCheck = verifyLicenseKey(adminKey);
+      if (!adminCheck.valid || !adminCheck.isAdmin) {
+        return res.status(403).json({ error: 'Accès refusé : clé administrateur requise.' });
+      }
+
+      const updated = updateManagedLicense(req.params.id, {
+        ...(username ? { username } : {}),
+        ...(status ? { status } : {}),
+        ...(notes !== undefined ? { notes } : {}),
+        ...(planName ? { planName } : {}),
+      });
+
+      if (!updated) {
+        return res.status(404).json({ error: 'Licence non trouvée.' });
+      }
+
+      res.json({ ok: true, record: updated, message: 'Licence mise à jour avec succès.' });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Admin: Delete a license key
+  app.delete('/api/license/admin/keys/:id', (req, res) => {
+    try {
+      const adminKey = req.headers['x-admin-key'] as string || req.query.adminKey as string;
+      const adminCheck = verifyLicenseKey(adminKey);
+      if (!adminCheck.valid || !adminCheck.isAdmin) {
+        return res.status(403).json({ error: 'Accès refusé : clé administrateur requise.' });
+      }
+
+      const deleted = deleteManagedLicense(req.params.id);
+      res.json({ ok: true, deleted, message: 'Licence supprimée.' });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
     }
   });
 

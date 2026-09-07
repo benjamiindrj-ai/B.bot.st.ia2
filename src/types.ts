@@ -503,6 +503,8 @@ export interface TrackedSportBet {
   tipId: string;
   sport: 'football' | 'basketball' | 'tennis' | 'mma' | 'esports' | 'hockey';
   match: string;
+  homeTeam?: string;
+  awayTeam?: string;
   league: string;
   market: string;
   odds: number;
@@ -526,6 +528,9 @@ export interface TrackedSportBet {
   stakeFixtureId?: string;
   stakeUrl?: string;
   stakeMarketName?: string;
+  verifiedEventId?: string;
+  verifiedEventDate?: string;
+  auditVerificationMethod?: 'event_id_exact' | 'bilateral_teams_and_date' | 'grounded_search_verified' | 'unresolved_pending';
 }
 
 export interface LiveStatItem {
@@ -1313,7 +1318,19 @@ export interface MonteCarloBacktestSummary {
   recommendedBankrollForOnePercentRuin: number;
 }
 
-export type LicensePlan = 'free' | 'vip_monthly' | 'vip_yearly' | 'vip_lifetime' | 'admin';
+export type LicensePlan = 'free' | 'vip_monthly' | 'vip_3months' | 'vip_6months' | 'vip_yearly' | 'vip_lifetime' | 'admin';
+
+export interface ManagedLicenseKey {
+  id: string;
+  key: string;
+  username: string;
+  plan: LicensePlan;
+  planName: string;
+  createdAt: number;
+  expiresAt: number | null;
+  status: 'active' | 'expired' | 'revoked';
+  notes?: string;
+}
 
 export interface UserLicenseState {
   isPro: boolean;

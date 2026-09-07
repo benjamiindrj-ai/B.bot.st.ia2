@@ -178,6 +178,7 @@ export const StakeLiveChart: React.FC<StakeLiveChartProps> = ({
   const [showGuideLines, setShowGuideLines] = useState<boolean>(true);
   const [copiedSummary, setCopiedSummary] = useState<boolean>(false);
   const [showBrush, setShowBrush] = useState<boolean>(false);
+  const [showMetricsGrid, setShowMetricsGrid] = useState<boolean>(!compact);
   const [zoomRange, setZoomRange] = useState<{ startIndex: number; endIndex: number } | null>(null);
 
   // Session Timer State (Antebot Style live counter - accurately tracks active running session time)
@@ -875,7 +876,19 @@ export const StakeLiveChart: React.FC<StakeLiveChartProps> = ({
       {/* -------------------------------------------------------------------- */}
       {/* 2. ANTEBOT EXACT 2-COLUMN METRIC TILES GRID                          */}
       {/* -------------------------------------------------------------------- */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-2.5 my-3">
+      <div className="flex items-center justify-between my-2">
+        <button
+          type="button"
+          onClick={() => setShowMetricsGrid(!showMetricsGrid)}
+          className="text-[11px] font-bold text-slate-400 hover:text-white flex items-center gap-1.5 bg-[#121e29] hover:bg-[#1a2c38] px-2.5 py-1.5 rounded-xl border border-[#213743] transition cursor-pointer"
+        >
+          <Activity className="w-3.5 h-3.5 text-[#00e701]" />
+          <span>{showMetricsGrid ? 'Masquer Métriques Détaillées' : 'Afficher Métriques Détaillées (12)'}</span>
+        </button>
+      </div>
+
+      {showMetricsGrid && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 my-3 animate-in fade-in duration-200">
         
         {/* LEFT COLUMN */}
         <div className="space-y-1.5">
@@ -1030,6 +1043,7 @@ export const StakeLiveChart: React.FC<StakeLiveChartProps> = ({
         </div>
 
       </div>
+      )}
 
       {/* -------------------------------------------------------------------- */}
       {/* 3. RECENT BETS PILL TICKER                                           */}
@@ -1067,9 +1081,9 @@ export const StakeLiveChart: React.FC<StakeLiveChartProps> = ({
       <div className="my-2 flex items-center justify-between gap-2">
         
         {/* Chart View Modes */}
-        <div className="flex items-center gap-1 bg-[#121e29] p-1 rounded-xl border border-[#213743] text-[11px]">
+        <div className="flex items-center gap-1 bg-[#121e29] p-1 rounded-xl border border-[#213743] text-[10px] sm:text-[11px] overflow-x-auto no-scrollbar max-w-[65vw] sm:max-w-none">
           {[
-            { id: 'profit', label: 'Courbe Profit' },
+            { id: 'profit', label: 'Profit' },
             { id: 'balance', label: 'Solde' },
             { id: 'drawdown', label: 'Drawdown' },
             { id: 'wager', label: 'Wager' },
@@ -1079,7 +1093,7 @@ export const StakeLiveChart: React.FC<StakeLiveChartProps> = ({
               key={mode.id}
               type="button"
               onClick={() => setChartMode(mode.id as any)}
-              className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer ${
+              className={`px-2 sm:px-2.5 py-1 rounded-lg font-bold transition cursor-pointer whitespace-nowrap ${
                 chartMode === mode.id
                   ? 'bg-[#00e701] text-slate-950 shadow-sm'
                   : 'text-slate-400 hover:text-white'
