@@ -1623,12 +1623,15 @@ function deepMerge(target: any, source: any): any {
   return output;
 }
 
+import { toolTranslationsData } from './toolTranslationsData';
+
 const langs = ['fr', 'en', 'es', 'de', 'pt'] as const;
 
 for (const lang of langs) {
   const base = existingTranslations[lang] || {};
   const extra = additions[lang] || {};
-  const merged = deepMerge(base, extra);
+  const toolExtra = toolTranslationsData[lang] || {};
+  const merged = deepMerge(deepMerge(base, extra), toolExtra);
 
   const fileContent = `import { Translations } from '../translations';
 

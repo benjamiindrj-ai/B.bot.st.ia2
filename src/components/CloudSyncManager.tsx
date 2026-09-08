@@ -169,13 +169,13 @@ export const CloudSyncManager: React.FC<CloudSyncManagerProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-white">Synchronisation Cloud & Sauvegardes Multi-Profils</h3>
+                <h3 className="text-base font-bold text-white">{t('cloud.title', 'Synchronisation Cloud & Sauvegardes Multi-Profils')}</h3>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
-                  PERSISTANCE ACTIVE
+                  {t('cloud.activePersistence', 'PERSISTANCE ACTIVE')}
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Profil actif : <strong className="text-white">{activeProfile?.name}</strong> • Dernière synchro : {lastSyncTime}
+                {t('cloud.activeProfile', 'Profil actif :')} <strong className="text-white">{activeProfile?.name}</strong> • {t('cloud.lastSync', 'Dernière synchro :')} {lastSyncTime}
               </p>
             </div>
           </div>
@@ -187,7 +187,7 @@ export const CloudSyncManager: React.FC<CloudSyncManagerProps> = ({
               className="py-2 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition flex items-center gap-2"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${syncStatus === 'syncing' ? 'animate-spin text-indigo-400' : ''}`} />
-              {syncStatus === 'syncing' ? 'Synchro en cours...' : 'Forcer la synchro'}
+              {syncStatus === 'syncing' ? t('cloud.syncing', 'Synchro en cours...') : t('cloud.forceSync', 'Forcer la synchro')}
             </button>
 
             <button
@@ -195,7 +195,7 @@ export const CloudSyncManager: React.FC<CloudSyncManagerProps> = ({
               className="py-2 px-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center gap-2 shadow-sm"
             >
               <Download className="w-3.5 h-3.5" />
-              Exporter JSON
+              {t('cloud.exportJson', 'Exporter JSON')}
             </button>
           </div>
         </div>
@@ -208,14 +208,14 @@ export const CloudSyncManager: React.FC<CloudSyncManagerProps> = ({
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-indigo-400" />
-              <h4 className="text-sm font-bold text-white">Gestion des Profils & Portefeuilles</h4>
+              <h4 className="text-sm font-bold text-white">{t('cloud.profilesTitle', 'Gestion des Profils & Portefeuilles')}</h4>
             </div>
             <button
               onClick={() => setIsCreatingProfile(true)}
               className="py-1 px-2.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-semibold flex items-center gap-1.5 transition"
             >
               <Plus className="w-3 h-3" />
-              Nouveau Profil
+              {t('cloud.newProfile', 'Nouveau Profil')}
             </button>
           </div>
 
@@ -239,7 +239,7 @@ export const CloudSyncManager: React.FC<CloudSyncManagerProps> = ({
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-white">{prof.name}</span>
                         {isSelected && (
-                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-500 text-white font-semibold">En cours</span>
+                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-500 text-white font-semibold">{t('cloud.activeBadge', 'ACTIF')}</span>
                         )}
                       </div>
                       <span className="text-[11px] text-slate-400">{prof.description}</span>
@@ -258,13 +258,13 @@ export const CloudSyncManager: React.FC<CloudSyncManagerProps> = ({
                             }}
                             className="px-2 py-0.5 rounded bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-bold"
                           >
-                            Confirmer
+                            {t('common.confirm', 'Confirmer')}
                           </button>
                           <button
                             onClick={() => setProfileToDelete(null)}
                             className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px]"
                           >
-                            Annuler
+                            {t('cloud.cancel', 'Annuler')}
                           </button>
                         </div>
                       ) : (
@@ -289,9 +289,9 @@ export const CloudSyncManager: React.FC<CloudSyncManagerProps> = ({
           {/* Modal / Form for creating profile */}
           {isCreatingProfile && (
             <form onSubmit={handleCreateProfileSubmit} className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
-              <h5 className="text-xs font-bold text-white">Créer un nouveau profil séparé</h5>
+              <h5 className="text-xs font-bold text-white">{t('cloud.newProfile', 'Nouveau Profil')}</h5>
               <div>
-                <label className="text-[11px] text-slate-400 block mb-1">Nom du profil (ex: Défi 50$ - Mines) :</label>
+                <label className="text-[11px] text-slate-400 block mb-1">{t('cloud.profileName', 'Nom du profil')} :</label>
                 <input
                   type="text"
                   required
@@ -302,7 +302,7 @@ export const CloudSyncManager: React.FC<CloudSyncManagerProps> = ({
                 />
               </div>
               <div>
-                <label className="text-[11px] text-slate-400 block mb-1">Description / Objectif :</label>
+                <label className="text-[11px] text-slate-400 block mb-1">{t('cloud.profileDesc', 'Description / Objectif')} :</label>
                 <input
                   type="text"
                   value={newProfileDesc}
@@ -317,13 +317,13 @@ export const CloudSyncManager: React.FC<CloudSyncManagerProps> = ({
                   onClick={() => setIsCreatingProfile(false)}
                   className="py-1.5 px-3 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold"
                 >
-                  Annuler
+                  {t('cloud.cancel', 'Annuler')}
                 </button>
                 <button
                   type="submit"
                   className="py-1.5 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold"
                 >
-                  Créer le profil
+                  {t('cloud.createProfileBtn', 'Créer Profil')}
                 </button>
               </div>
             </form>
@@ -335,11 +335,11 @@ export const CloudSyncManager: React.FC<CloudSyncManagerProps> = ({
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
             <h4 className="text-sm font-bold text-white flex items-center gap-2">
               <FileJson className="w-4 h-4 text-emerald-400" />
-              Import & Restauration de Données
+              {t('cloud.importBackup', 'Restaurer Sauvegarde JSON')}
             </h4>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              Vous pouvez charger un fichier de sauvegarde JSON pour restaurer instantanément toutes vos sessions, soldes, configurations de bot et stratégies personnalisées.
+              {t('cloud.importBackupDesc', 'Importez une sauvegarde précédente. Remplace ou fusionne vos sessions et paramètres enregistrés.')}
             </p>
 
             <input
@@ -356,7 +356,7 @@ export const CloudSyncManager: React.FC<CloudSyncManagerProps> = ({
                 className="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs font-bold transition flex items-center justify-center gap-2"
               >
                 <Upload className="w-3.5 h-3.5 text-indigo-400" />
-                Charger Sauvegarde
+                {t('cloud.importBackup', 'Restaurer Sauvegarde JSON')}
               </button>
 
               <button
@@ -364,7 +364,7 @@ export const CloudSyncManager: React.FC<CloudSyncManagerProps> = ({
                 className="py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm"
               >
                 <Download className="w-3.5 h-3.5" />
-                Sauvegarder JSON
+                {t('cloud.exportBackup', 'Exporter Sauvegarde Complète')}
               </button>
             </div>
           </div>
@@ -373,16 +373,16 @@ export const CloudSyncManager: React.FC<CloudSyncManagerProps> = ({
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
             <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
               <Database className="w-3.5 h-3.5 text-slate-400" />
-              Télémétrie du Stockage Local
+              {t('cloud.storageTitle', 'Sauvegarde, Import & Export de Données')}
             </h4>
 
             <div className="grid grid-cols-3 gap-2 text-center">
               <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
-                <span className="text-[10px] text-slate-500 block">Sessions</span>
+                <span className="text-[10px] text-slate-500 block">{t('nav.journal', 'Sessions')}</span>
                 <span className="text-sm font-mono font-bold text-white">{totalEntries}</span>
               </div>
               <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
-                <span className="text-[10px] text-slate-500 block">Stratégies</span>
+                <span className="text-[10px] text-slate-500 block">{t('nav.strategies', 'Stratégies')}</span>
                 <span className="text-sm font-mono font-bold text-indigo-300">{strategies.length}</span>
               </div>
               <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
@@ -392,7 +392,7 @@ export const CloudSyncManager: React.FC<CloudSyncManagerProps> = ({
             </div>
 
             <div className="pt-2 border-t border-slate-800 flex justify-between items-center">
-              <span className="text-[11px] text-slate-500">Zone de réinitialisation</span>
+              <span className="text-[11px] text-slate-500">{t('cloud.resetData', 'Réinitialisation Complète')}</span>
               {showResetConfirm ? (
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] text-rose-300 font-bold">Réinitialiser ?</span>
@@ -406,7 +406,7 @@ export const CloudSyncManager: React.FC<CloudSyncManagerProps> = ({
                     onClick={() => setShowResetConfirm(false)}
                     className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px]"
                   >
-                    Annuler
+                    {t('cloud.cancel', 'Annuler')}
                   </button>
                 </div>
               ) : (
@@ -414,7 +414,7 @@ export const CloudSyncManager: React.FC<CloudSyncManagerProps> = ({
                   onClick={() => setShowResetConfirm(true)}
                   className="text-[11px] text-rose-400 hover:text-rose-300 underline font-semibold"
                 >
-                  Réinitialiser les données démo
+                  {t('cloud.resetData', 'Réinitialisation Complète')}
                 </button>
               )}
             </div>

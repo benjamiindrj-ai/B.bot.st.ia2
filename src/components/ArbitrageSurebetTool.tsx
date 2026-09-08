@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { SportTip, TrackedSportBet } from '../types';
 import { cleanStakeDomain } from '../utils/stakeDomains';
+import { useTranslation } from '../i18n/LanguageContext';
 
 export interface ArbitrageOpportunity {
   id: string;
@@ -59,6 +60,7 @@ export const ArbitrageSurebetTool: React.FC<ArbitrageSurebetToolProps> = ({
   onTrackBet,
   onNavigateToStake,
 }) => {
+  const { t } = useTranslation();
   const [totalInvestment, setTotalInvestment] = useState<number>(() => {
     return currentBalance > 10 ? Math.min(100, Math.round(currentBalance)) : 100;
   });
@@ -412,13 +414,13 @@ export const ArbitrageSurebetTool: React.FC<ArbitrageSurebetToolProps> = ({
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-bold uppercase tracking-wider">
               <Scale className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Scanner d'Arbitrage Multi-Bookmakers & Surebets</span>
+              <span>{t('arbitrageTool.tag', "Scanner d'Arbitrage Multi-Bookmakers & Surebets")}</span>
             </div>
             <h2 className="text-2xl font-black text-white tracking-tight">
-              Arbitrage Sportif & Profit 100% Mathématiquement Garanti
+              {t('arbitrageTool.title', 'Arbitrage Sportif & Profit 100% Mathématiquement Garanti')}
             </h2>
             <p className="text-sm text-slate-300 max-w-3xl leading-relaxed">
-              Détectez en temps réel les écarts de cotations entre <strong>Stake.com</strong>, <strong>Pinnacle</strong>, <strong>Bet365</strong> et <strong>Betfair</strong>. En couvrant chaque issue proportionnellement, vous verrouillez un bénéfice net garanti peu importe le résultat final du match.
+              {t('arbitrageTool.subtitle', 'Détectez en temps réel les écarts de cotations entre Stake.com, Pinnacle, Bet365 et Betfair. En couvrant chaque issue proportionnellement, vous verrouillez un bénéfice net garanti peu importe le résultat final du match.')}
             </p>
           </div>
 
@@ -427,8 +429,8 @@ export const ArbitrageSurebetTool: React.FC<ArbitrageSurebetToolProps> = ({
               <Zap className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-[11px] text-slate-400 font-medium">Opportunités Détectées</div>
-              <div className="text-lg font-black text-white">{filteredArbitrages.length} Surebets Actifs</div>
+              <div className="text-[11px] text-slate-400 font-medium">{t('arbitrageTool.detectedOpportunities', 'Opportunités Détectées')}</div>
+              <div className="text-lg font-black text-white">{filteredArbitrages.length} {t('arbitrageTool.activeSurebets', 'Surebets Actifs')}</div>
             </div>
           </div>
         </div>
@@ -448,7 +450,7 @@ export const ArbitrageSurebetTool: React.FC<ArbitrageSurebetToolProps> = ({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Rechercher une équipe, compétition..."
+                  placeholder={t('arbitrageTool.searchPlaceholder', 'Rechercher une équipe, compétition...')}
                   className="w-full bg-slate-950 border border-slate-700/80 rounded-lg pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                 />
               </div>
@@ -459,15 +461,15 @@ export const ArbitrageSurebetTool: React.FC<ArbitrageSurebetToolProps> = ({
                   onChange={(e) => setSportFilter(e.target.value)}
                   className="bg-slate-950 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="all">Tous les Sports</option>
-                  <option value="football">Football ⚽</option>
-                  <option value="basketball">Basketball 🏀</option>
-                  <option value="tennis">Tennis 🎾</option>
-                  <option value="mma">MMA / UFC 🥊</option>
+                  <option value="all">{t('arbitrageTool.allSports', 'Tous les Sports')}</option>
+                  <option value="football">{t('arbitrageTool.football', 'Football ⚽')}</option>
+                  <option value="basketball">{t('arbitrageTool.basketball', 'Basketball 🏀')}</option>
+                  <option value="tennis">{t('arbitrageTool.tennis', 'Tennis 🎾')}</option>
+                  <option value="mma">{t('arbitrageTool.mma', 'MMA / UFC 🥊')}</option>
                 </select>
 
                 <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-300">
-                  <span className="text-[11px] text-slate-400">Min ROI :</span>
+                  <span className="text-[11px] text-slate-400">{t('arbitrageTool.minRoi', 'Min ROI :')}</span>
                   <input
                     type="number"
                     step="0.5"
@@ -488,8 +490,8 @@ export const ArbitrageSurebetTool: React.FC<ArbitrageSurebetToolProps> = ({
             {filteredArbitrages.length === 0 ? (
               <div className="p-8 text-center bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
                 <AlertCircle className="w-8 h-8 text-slate-500 mx-auto" />
-                <p className="text-sm font-semibold text-slate-300">Aucun Surebet correspondant aux filtres</p>
-                <p className="text-xs text-slate-500">Essayez de baisser le seuil de profit minimum ou d'élargir la recherche.</p>
+                <p className="text-sm font-semibold text-slate-300">{t('arbitrageTool.noOpportunities', 'Aucune opportunité d\'arbitrage correspondant aux filtres.')}</p>
+                <p className="text-xs text-slate-500">{t('arbitrageTool.noOpportunitiesDesc', 'Essayez de réduire le ROI minimum ou d\'élargir la sélection de sports.')}</p>
               </div>
             ) : (
               filteredArbitrages.map((arb) => {
@@ -575,8 +577,8 @@ export const ArbitrageSurebetTool: React.FC<ArbitrageSurebetToolProps> = ({
                     <Scale className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-black text-white">Calculatrice de Couverture</h3>
-                    <p className="text-[11px] text-slate-400">Répartition optimale des mises</p>
+                    <h3 className="text-sm font-black text-white">{t('arbitrageTool.calculatorTitle', 'Calculateur de Couverture Arbitrage')}</h3>
+                    <p className="text-[11px] text-slate-400">{t('arbitrageTool.guaranteedProfit', 'Profit Garanti')}</p>
                   </div>
                 </div>
                 <div className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-bold">
@@ -596,7 +598,7 @@ export const ArbitrageSurebetTool: React.FC<ArbitrageSurebetToolProps> = ({
                 <div className="flex items-center justify-between text-xs">
                   <label className="text-slate-300 font-bold flex items-center gap-1.5">
                     <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Mise Totale à Répartir</span>
+                    <span>{t('arbitrageTool.totalToSpread', 'Mise Totale à Répartir')}</span>
                   </label>
                   <div className="flex items-center gap-2">
                     <button
@@ -607,7 +609,7 @@ export const ArbitrageSurebetTool: React.FC<ArbitrageSurebetToolProps> = ({
                           : 'bg-slate-800 text-slate-400 border-slate-700'
                       }`}
                     >
-                      {roundStakes ? 'Arrondir les mises' : 'Mises exactes'}
+                      {roundStakes ? t('arbitrageTool.roundStakes', 'Arrondir les mises') : t('arbitrageTool.exactStakes', 'Mises exactes')}
                     </button>
                   </div>
                 </div>
@@ -647,7 +649,7 @@ export const ArbitrageSurebetTool: React.FC<ArbitrageSurebetToolProps> = ({
 
               {/* Legs Breakdown & Sizing */}
               <div className="space-y-2.5">
-                <div className="text-xs font-bold text-slate-300">Répartition des Mises & Bookmakers :</div>
+                <div className="text-xs font-bold text-slate-300">{t('arbitrageTool.breakdownTitle', 'Répartition des Mises & Bookmakers :')}</div>
                 
                 {calculatedLegs.map((leg, lIdx) => (
                   <div 
@@ -682,11 +684,11 @@ export const ArbitrageSurebetTool: React.FC<ArbitrageSurebetToolProps> = ({
 
                     <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-800/60">
                       <div>
-                        <span className="text-slate-400 text-[11px]">Miser : </span>
+                        <span className="text-slate-400 text-[11px]">{t('arbitrageTool.betLabel', 'Miser :')} </span>
                         <strong className="text-white font-mono">{leg.recommendedStake} {currency}</strong>
                       </div>
                       <div>
-                        <span className="text-slate-400 text-[11px]">Gain : </span>
+                        <span className="text-slate-400 text-[11px]">{t('arbitrageTool.payoutLabel', 'Gain :')} </span>
                         <strong className="text-emerald-400 font-mono">{leg.payout} {currency}</strong>
                       </div>
                     </div>
@@ -699,7 +701,7 @@ export const ArbitrageSurebetTool: React.FC<ArbitrageSurebetToolProps> = ({
                           className="flex-1 py-1.5 px-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] transition flex items-center justify-center gap-1 shadow-sm"
                         >
                           <PlusCircle className="w-3 h-3" />
-                          <span>Suivre le pari Stake</span>
+                          <span>{t('arbitrageTool.trackStakeBet', 'Suivre le pari Stake')}</span>
                         </button>
                         {leg.stakeUrl && (
                           <a
@@ -707,7 +709,7 @@ export const ArbitrageSurebetTool: React.FC<ArbitrageSurebetToolProps> = ({
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition border border-slate-700"
-                            title="Ouvrir sur Stake.com"
+                            title={t('arbitrageTool.openStake', 'Ouvrir sur Stake.com')}
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>
@@ -721,33 +723,33 @@ export const ArbitrageSurebetTool: React.FC<ArbitrageSurebetToolProps> = ({
               {/* Final Summary Card */}
               <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-950/60 to-slate-950 border border-emerald-500/40 space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-300 font-medium">Mise Totale Engagée :</span>
+                  <span className="text-slate-300 font-medium">{t('arbitrageTool.totalCommitted', 'Mise Totale Engagée :')}</span>
                   <span className="text-white font-mono font-bold">{totalCalculatedStake} {currency}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-300 font-medium">Retour Minimal Garanti :</span>
+                  <span className="text-slate-300 font-medium">{t('arbitrageTool.minGuaranteedReturn', 'Retour Minimal Garanti :')}</span>
                   <span className="text-emerald-300 font-mono font-bold">{minCalculatedPayout} {currency}</span>
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-emerald-500/20">
-                  <span className="text-sm font-black text-white">Profit Net Garanti :</span>
+                  <span className="text-sm font-black text-white">{t('arbitrageTool.netGuaranteedProfit', 'Profit Net Garanti :')}</span>
                   <div className="text-right">
                     <div className="text-base font-black text-emerald-400 font-mono">
                       +{guaranteedProfitNet} {currency}
                     </div>
                     <div className="text-[10px] text-emerald-300 font-mono">
-                      ({guaranteedRoiPct >= 0 ? `+${guaranteedRoiPct}%` : `${guaranteedRoiPct}%`} de ROI sans risque)
+                      ({guaranteedRoiPct >= 0 ? `+${guaranteedRoiPct}%` : `${guaranteedRoiPct}%`} {t('arbitrageTool.riskFreeRoi', 'de ROI sans risque')})
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="text-[10px] text-slate-400 bg-slate-950/60 p-3 rounded-lg border border-slate-800/80 leading-relaxed">
-                ℹ️ <strong>Conseil Pro :</strong> Placez d'abord la mise sur le bookmaker à cote la plus instable ou à faible liquidité avant de valider la couverture sur Stake.com.
+                ℹ️ {t('arbitrageTool.proTip', "Conseil Pro : Placez d'abord la mise sur le bookmaker à cote la plus instable ou à faible liquidité avant de valider la couverture sur Stake.com.")}
               </div>
             </div>
           ) : (
             <div className="p-8 text-center bg-slate-900/60 rounded-2xl border border-slate-800">
-              <p className="text-xs text-slate-400">Sélectionnez une opportunité à gauche pour ouvrir la calculatrice.</p>
+              <p className="text-xs text-slate-400">{t('arbitrageTool.selectOpportunityPrompt', 'Sélectionnez une opportunité à gauche pour ouvrir la calculatrice.')}</p>
             </div>
           )}
         </div>

@@ -19,6 +19,7 @@ import {
   DollarSign
 } from 'lucide-react';
 import { SportTip, TrackedSportBet } from '../types';
+import { useTranslation } from '../i18n/LanguageContext';
 
 export type AccumulatorPreset = 'safe_duo' | 'value_treble' | 'asymmetric_boost' | 'custom';
 
@@ -35,6 +36,7 @@ export const SafeAccumulatorGenerator: React.FC<SafeAccumulatorGeneratorProps> =
   currency,
   onTrackBet,
 }) => {
+  const { t } = useTranslation();
   const [selectedPreset, setSelectedPreset] = useState<AccumulatorPreset>('safe_duo');
   const [selectedTipIds, setSelectedTipIds] = useState<string[]>([]);
   const [customStakeAmount, setCustomStakeAmount] = useState<number>(() => {
@@ -220,7 +222,7 @@ export const SafeAccumulatorGenerator: React.FC<SafeAccumulatorGeneratorProps> =
     };
 
     onTrackBet(consolidatedTip, customStakeAmount);
-    setSavedSuccessMessage(`Combiné (${combinedMetrics.totalOdds}x) enregistré avec succès dans votre bilan !`);
+    setSavedSuccessMessage(t('accumulatorTool.trackSuccess', `Combiné (${combinedMetrics.totalOdds}x) enregistré avec succès dans votre bilan !`));
     setTimeout(() => setSavedSuccessMessage(null), 4000);
   };
 
@@ -248,13 +250,13 @@ export const SafeAccumulatorGenerator: React.FC<SafeAccumulatorGeneratorProps> =
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold uppercase tracking-wider">
               <Layers className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Générateur Intelligent de Combinés Optimisés (EV+ Accumulator)</span>
+              <span>{t('accumulatorTool.tag', 'Générateur Intelligent de Combinés Optimisés (EV+ Accumulator)')}</span>
             </div>
             <h2 className="text-2xl font-black text-white tracking-tight">
-              Combinés Mathématiquement Rentables & Sans Corrélation Négative
+              {t('accumulatorTool.title', 'Combinés Mathématiquement Rentables & Sans Corrélation Négative')}
             </h2>
             <p className="text-sm text-slate-300 max-w-3xl leading-relaxed">
-              L'IA combine automatiquement les meilleures sélections à espérance positive (EV+) sans conflit de corrélation, calcule la probabilité conjointe exacte et dimensionne votre mise selon le critère de Kelly fractionnaire.
+              {t('accumulatorTool.subtitle', "L'IA combine automatiquement les meilleures sélections à espérance positive (EV+) sans conflit de corrélation, calcule la probabilité conjointe exacte et dimensionne votre mise selon le critère de Kelly fractionnaire.")}
             </p>
           </div>
 
@@ -269,7 +271,7 @@ export const SafeAccumulatorGenerator: React.FC<SafeAccumulatorGeneratorProps> =
               }`}
             >
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>🛡️ Duo Sûr (~1.85)</span>
+              <span>🛡️ {t('accumulatorTool.presetSafeDuo', 'Duo Sécurité (2 Matchs)')}</span>
             </button>
 
             <button
@@ -281,7 +283,7 @@ export const SafeAccumulatorGenerator: React.FC<SafeAccumulatorGeneratorProps> =
               }`}
             >
               <Target className="w-3.5 h-3.5" />
-              <span>🎯 Trio Value (~3.10)</span>
+              <span>🎯 {t('accumulatorTool.presetValueTreble', 'Trio Value EV+ (3 Matchs)')}</span>
             </button>
 
             <button
@@ -293,7 +295,7 @@ export const SafeAccumulatorGenerator: React.FC<SafeAccumulatorGeneratorProps> =
               }`}
             >
               <Flame className="w-3.5 h-3.5 text-amber-300" />
-              <span>🚀 Quad Boost (~5.50)</span>
+              <span>🚀 {t('accumulatorTool.presetAsymmetricBoost', 'Boost Asymétrique (4 Matchs)')}</span>
             </button>
 
             <button
@@ -310,7 +312,7 @@ export const SafeAccumulatorGenerator: React.FC<SafeAccumulatorGeneratorProps> =
               }`}
             >
               <Calculator className="w-3.5 h-3.5" />
-              <span>⚙️ Sur-Mesure</span>
+              <span>⚙️ {t('accumulatorTool.presetCustom', 'Sur-Mesure (Sélection Libre)')}</span>
             </button>
           </div>
         </div>
@@ -337,15 +339,15 @@ export const SafeAccumulatorGenerator: React.FC<SafeAccumulatorGeneratorProps> =
                   <Layers className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-white">Ticket Combiné IA Stake</h3>
+                  <h3 className="text-base font-black text-white">{t('accumulatorTool.ticketHeader', 'Ticket Combiné IA Stake')}</h3>
                   <div className="text-xs text-slate-400 font-medium">
-                    {activePicks.length} Sélections validées
+                    {activePicks.length} {t('accumulatorTool.picksCount', 'Sélections validées')}
                   </div>
                 </div>
               </div>
 
               <div className="text-right">
-                <div className="text-xs text-slate-400 font-medium">Cote Globale</div>
+                <div className="text-xs text-slate-400 font-medium">{t('accumulatorTool.totalCombinedOdds', 'Cote Totale Combinée')}</div>
                 <div className="text-2xl font-black text-amber-300 font-mono tracking-tight">
                   @{combinedMetrics.totalOdds.toFixed(2)}
                 </div>
@@ -357,7 +359,7 @@ export const SafeAccumulatorGenerator: React.FC<SafeAccumulatorGeneratorProps> =
               <div className="p-3 rounded-xl bg-amber-950/60 border border-amber-500/50 text-amber-200 text-xs flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                 <div>
-                  <strong>Attention Corrélation :</strong> Plusieurs sélections proviennent du même match. Sur certains bookmakers, les sélections d'un même événement doivent être placées en Bet Builder.
+                  <strong>{t('accumulatorTool.correlationWarning', 'Attention Corrélation :')}</strong> {t('accumulatorTool.correlationWarningDesc', 'Plusieurs sélections proviennent du même match. Sur certains bookmakers, les sélections d\'un même événement doivent être placées en Bet Builder.')}
                 </div>
               </div>
             )}
@@ -366,7 +368,7 @@ export const SafeAccumulatorGenerator: React.FC<SafeAccumulatorGeneratorProps> =
             <div className="space-y-2.5">
               {activePicks.length === 0 ? (
                 <div className="p-8 text-center bg-slate-950/80 rounded-xl border border-slate-800 text-slate-400 text-xs">
-                  Aucune sélection dans le combiné. Choisissez des matchs dans la liste à droite.
+                  {t('accumulatorTool.emptySelectionWarning', 'Veuillez sélectionner au moins 2 matchs pour générer un combiné.')}
                 </div>
               ) : (
                 activePicks.map((pick, pIdx) => (
@@ -400,7 +402,7 @@ export const SafeAccumulatorGenerator: React.FC<SafeAccumulatorGeneratorProps> =
                         type="button"
                         onClick={() => handleToggleTip(pick.id)}
                         className="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-950/30 transition"
-                        title="Retirer du combiné"
+                        title={t('accumulatorTool.removePick', 'Retirer du combiné')}
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -413,29 +415,29 @@ export const SafeAccumulatorGenerator: React.FC<SafeAccumulatorGeneratorProps> =
             {/* Math & Stochastic Engine Indicators */}
             <div className="grid grid-cols-3 gap-2 p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 text-center">
               <div>
-                <div className="text-[10px] text-slate-400 font-medium uppercase">Proba Conjointe</div>
+                <div className="text-[10px] text-slate-400 font-medium uppercase">{t('accumulatorTool.jointTrueProb', 'Probabilité Conjointe Estimée')}</div>
                 <div className="text-sm font-black text-cyan-300 font-mono mt-0.5">
                   {combinedMetrics.jointTrueProb}%
                 </div>
-                <div className="text-[9px] text-slate-500 font-mono">Vs Implicite {combinedMetrics.jointImpliedProb}%</div>
+                <div className="text-[9px] text-slate-500 font-mono">{t('accumulatorTool.vsImplied', 'Vs Implicite')} {combinedMetrics.jointImpliedProb}%</div>
               </div>
 
               <div>
-                <div className="text-[10px] text-slate-400 font-medium uppercase">Espérance EV+</div>
+                <div className="text-[10px] text-slate-400 font-medium uppercase">{t('accumulatorTool.combinedEv', 'Espérance EV Combinée')}</div>
                 <div className={`text-sm font-black font-mono mt-0.5 ${
                   combinedMetrics.combinedEvPct > 0 ? 'text-emerald-400' : 'text-slate-400'
                 }`}>
                   {combinedMetrics.combinedEvPct > 0 ? `+${combinedMetrics.combinedEvPct}%` : `${combinedMetrics.combinedEvPct}%`}
                 </div>
-                <div className="text-[9px] text-emerald-500/80 font-mono">Edge Mathématique</div>
+                <div className="text-[9px] text-emerald-500/80 font-mono">{t('accumulatorTool.mathEdge', 'Edge Mathématique')}</div>
               </div>
 
               <div>
-                <div className="text-[10px] text-slate-400 font-medium uppercase">Kelly Fraction</div>
+                <div className="text-[10px] text-slate-400 font-medium uppercase">{t('accumulatorTool.kellyFraction', 'Kelly Fraction')}</div>
                 <div className="text-sm font-black text-purple-300 font-mono mt-0.5">
                   {combinedMetrics.suggestedKellyStakePercent}%
                 </div>
-                <div className="text-[9px] text-slate-500 font-mono">Conseillé: {combinedMetrics.suggestedStakeAmount} {currency}</div>
+                <div className="text-[9px] text-slate-500 font-mono">{t('accumulatorTool.suggestedStake', 'Mise Suggérée (Kelly)')}: {combinedMetrics.suggestedStakeAmount} {currency}</div>
               </div>
             </div>
 
@@ -444,14 +446,14 @@ export const SafeAccumulatorGenerator: React.FC<SafeAccumulatorGeneratorProps> =
               <div className="flex items-center justify-between text-xs">
                 <label className="text-slate-300 font-bold flex items-center gap-1.5">
                   <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Montant de la Mise</span>
+                  <span>{t('accumulatorTool.stakeAmount', 'Mise du Combiné :')}</span>
                 </label>
                 <button
                   type="button"
                   onClick={() => setCustomStakeAmount(combinedMetrics.suggestedStakeAmount)}
                   className="text-[10px] text-emerald-400 hover:text-emerald-300 underline font-bold"
                 >
-                  Appliquer Kelly IA ({combinedMetrics.suggestedStakeAmount} {currency})
+                  {t('accumulatorTool.applyKelly', 'Appliquer Kelly IA')} ({combinedMetrics.suggestedStakeAmount} {currency})
                 </button>
               </div>
 
@@ -472,13 +474,13 @@ export const SafeAccumulatorGenerator: React.FC<SafeAccumulatorGeneratorProps> =
               {/* Potential Payout Card */}
               <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-950/80 to-slate-950 border border-emerald-500/40 space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-300">Retour Total Potentiel :</span>
+                  <span className="text-slate-300">{t('accumulatorTool.potentialPayout', 'Gain Potentiel')} :</span>
                   <span className="text-emerald-300 font-mono font-bold text-sm">
                     {combinedMetrics.potentialPayout} {currency}
                   </span>
                 </div>
                 <div className="flex items-center justify-between pt-1 border-t border-emerald-500/20">
-                  <span className="text-sm font-black text-white">Gain Net Potentiel :</span>
+                  <span className="text-sm font-black text-white">{t('accumulatorTool.netProfit', 'Bénéfice Net')} :</span>
                   <span className="text-lg font-black text-emerald-400 font-mono">
                     +{combinedMetrics.potentialNetProfit} {currency}
                   </span>
@@ -495,7 +497,7 @@ export const SafeAccumulatorGenerator: React.FC<SafeAccumulatorGeneratorProps> =
                 className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/50 disabled:opacity-50"
               >
                 <PlusCircle className="w-4 h-4" />
-                <span>Enregistrer dans le Bilan IA</span>
+                <span>{t('accumulatorTool.trackAccumulator', 'Enregistrer Combiné dans le Bilan')}</span>
               </button>
 
               <button
@@ -505,7 +507,7 @@ export const SafeAccumulatorGenerator: React.FC<SafeAccumulatorGeneratorProps> =
                 className="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition flex items-center justify-center gap-2 border border-slate-700"
               >
                 {isCopiedTicket ? <Check className="w-4 h-4 text-emerald-400" /> : <Layers className="w-4 h-4 text-slate-400" />}
-                <span>{isCopiedTicket ? 'Ticket Copié !' : 'Copier le Ticket'}</span>
+                <span>{isCopiedTicket ? t('accumulatorTool.ticketCopied', 'Ticket Copié !') : t('accumulatorTool.copyTicket', 'Copier le Ticket')}</span>
               </button>
 
               <a
@@ -513,7 +515,7 @@ export const SafeAccumulatorGenerator: React.FC<SafeAccumulatorGeneratorProps> =
                 target="_blank"
                 rel="noopener noreferrer"
                 className="py-3 px-3 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 font-bold text-xs transition flex items-center justify-center border border-blue-500/40"
-                title="Ouvrir Stake.com Sports"
+                title={t('accumulatorTool.openStakeSports', 'Ouvrir Stake.com Sports')}
               >
                 <ExternalLink className="w-4 h-4" />
               </a>
@@ -528,21 +530,21 @@ export const SafeAccumulatorGenerator: React.FC<SafeAccumulatorGeneratorProps> =
             <div className="flex items-center justify-between">
               <div className="text-xs font-bold text-slate-200 flex items-center gap-2">
                 <Target className="w-4 h-4 text-indigo-400" />
-                <span>Sélectionnez vos Matchs pour le Combiné</span>
+                <span>{t('accumulatorTool.selectMatchesTitle', 'Sélectionnez vos Matchs pour le Combiné')}</span>
               </div>
               <span className="text-[11px] text-slate-400 font-mono">
-                {eligibleTips.length} Matchs Disponibles
+                {eligibleTips.length} {t('accumulatorTool.matchesAvailable', 'Matchs Disponibles')}
               </span>
             </div>
             <p className="text-[11px] text-slate-400 leading-relaxed">
-              Cliquez sur n'importe quel match ci-dessous pour l'ajouter ou le retirer instantanément de votre combiné.
+              {t('accumulatorTool.selectMatchesSubtitle', "Cliquez sur n'importe quel match ci-dessous pour l'ajouter ou le retirer instantanément de votre combiné.")}
             </p>
           </div>
 
           <div className="space-y-2.5 max-h-[680px] overflow-y-auto pr-1">
             {eligibleTips.length === 0 ? (
               <div className="p-8 text-center bg-slate-900/60 rounded-xl border border-slate-800 text-slate-400 text-xs">
-                Aucun match disponible pour le moment.
+                {t('accumulatorTool.noMatchesAvailable', 'Aucun match disponible pour le moment.')}
               </div>
             ) : (
               eligibleTips.map((tip) => {

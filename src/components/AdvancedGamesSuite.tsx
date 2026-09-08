@@ -194,14 +194,14 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
           <div>
             <h3 className="text-base font-bold text-white flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-indigo-400" />
-              Suite Jeux Avancés & Matrices Mathématiques
+              {t('games.title', 'Suite Jeux Avancés & Matrices Mathématiques')}
             </h3>
             <p className="text-xs text-slate-400">
-              Blackjack Basic Strategy, Secteurs Roulette Européenne & Calculateurs de Cotes
+              {t('games.subtitle', 'Blackjack Basic Strategy, Secteurs Roulette Européenne & Calculateurs de Cotes')}
             </p>
           </div>
           <span className="text-[11px] px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-semibold self-start sm:self-auto">
-            RTP Optimisé 99.4%
+            {t('games.optimizedRtp', 'RTP Optimisé 99.4%')}
           </span>
         </div>
 
@@ -215,7 +215,7 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
                 : 'bg-slate-950/60 text-slate-400 hover:text-slate-200 border border-slate-800'
             }`}
           >
-            <span>🃏 Blackjack Stratégie</span>
+            <span>🃏 {t('games.tabBlackjack', 'Blackjack Stratégie')}</span>
           </button>
 
           <button
@@ -226,7 +226,7 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
                 : 'bg-slate-950/60 text-slate-400 hover:text-slate-200 border border-slate-800'
             }`}
           >
-            <span>🎡 Roulette Secteurs</span>
+            <span>🎡 {t('games.tabRoulette', 'Roulette Secteurs')}</span>
           </button>
 
           <button
@@ -237,7 +237,7 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
                 : 'bg-slate-950/60 text-slate-400 hover:text-slate-200 border border-slate-800'
             }`}
           >
-            <span>🚀 Crash / Limbo EV</span>
+            <span>🚀 {t('games.tabCrashEv', 'Crash / Limbo EV')}</span>
           </button>
 
           <button
@@ -248,7 +248,7 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
                 : 'bg-slate-950/60 text-slate-400 hover:text-slate-200 border border-slate-800'
             }`}
           >
-            <span>📊 Cotes & Probabilités</span>
+            <span>📊 {t('games.tabOddsCalc', 'Cotes & Probabilités')}</span>
           </button>
         </div>
       </div>
@@ -262,15 +262,15 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
                 <h4 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-                  <span>Calculateur de Décision Optimale (Stake Blackjack)</span>
+                  <span>{t('games.bjTitle', 'Calculateur de Décision Optimale (Stake Blackjack)')}</span>
                 </h4>
-                <p className="text-xs text-slate-400">Règle Stand on Soft 17 • Avantage maison réduit à 0.57%</p>
+                <p className="text-xs text-slate-400">{t('games.bjRule', 'Règle Stand on Soft 17 • Avantage maison réduit à 0.57%')}</p>
               </div>
             </div>
 
             {/* Hand Type selection */}
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1.5">Type de main joueur :</label>
+              <label className="text-xs font-semibold text-slate-300 block mb-1.5">{t('games.handType', 'Type de main joueur :')}</label>
               <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
@@ -279,7 +279,7 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
                     playerType === 'hard' ? 'bg-blue-600 text-white border-blue-500' : 'bg-slate-950 text-slate-400 border-slate-800'
                   }`}
                 >
-                  Total Dur (Hard)
+                  {t('games.hardTotal', 'Total Dur (Hard)')}
                 </button>
                 <button
                   type="button"
@@ -288,7 +288,7 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
                     playerType === 'soft' ? 'bg-purple-600 text-white border-purple-500' : 'bg-slate-950 text-slate-400 border-slate-800'
                   }`}
                 >
-                  Main avec As (Soft)
+                  {t('games.softHand', 'Main Soft (avec As)')}
                 </button>
                 <button
                   type="button"
@@ -297,7 +297,7 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
                     playerType === 'pair' ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-slate-950 text-slate-400 border-slate-800'
                   }`}
                 >
-                  Paire (Splits)
+                  {t('games.pairHand', 'Paire (Splits)')}
                 </button>
               </div>
             </div>
@@ -383,7 +383,7 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
             {/* Dealer Upcard Selector */}
             <div>
               <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                Carte visible du croupier (Upcard) :
+                {t('games.dealerCard', 'Carte visible du Croupier :')}
               </label>
               <div className="grid grid-cols-5 sm:grid-cols-10 gap-1">
                 {[
@@ -417,7 +417,7 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
             {/* Decision Result Box */}
             <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-400">Action Mathématique Recommandée :</span>
+                <span className="text-xs font-semibold text-slate-400">{t('games.optimalAction', 'Action Mathématique Recommandée :')}</span>
                 <span className={`px-2.5 py-0.5 rounded text-xs font-mono font-extrabold ${bjDecision.color}`}>
                   {bjDecision.badge}
                 </span>
@@ -436,39 +436,39 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
           <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
             <h4 className="text-sm font-bold text-slate-100 flex items-center gap-2">
               <Layers className="w-4 h-4 text-indigo-400" />
-              Les 4 Piliers Fondamentaux du Blackjack
+              {t('games.bjPillarsTitle', 'Les 4 Piliers Fondamentaux du Blackjack')}
             </h4>
             
             <div className="space-y-2.5 text-xs">
               <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-start gap-2.5">
                 <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold flex items-center justify-center flex-shrink-0">1</span>
                 <div>
-                  <strong className="text-white block font-semibold">Toujours Séparer As et 8 :</strong>
-                  <span className="text-slate-400">Une paire d'As donne deux opportunités de 21. Une paire de 8 (16) est la pire main, la séparer permet de repartir sur deux 8 offensifs.</span>
+                  <strong className="text-white block font-semibold">{t('games.pillar1Title', "Toujours Séparer As et 8 :")}</strong>
+                  <span className="text-slate-400">{t('games.pillar1Desc', "Une paire d'As donne deux opportunités de 21. Une paire de 8 (16) est la pire main, la séparer permet de repartir sur deux 8 offensifs.")}</span>
                 </div>
               </div>
 
               <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-start gap-2.5">
                 <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center flex-shrink-0">2</span>
                 <div>
-                  <strong className="text-white block font-semibold">Ne JAMAIS Prendre l'Assurance :</strong>
-                  <span className="text-slate-400">L'assurance paie 2 contre 1 alors que la probabilité réelle que le croupier ait un blackjack est de 9 sur 13 (avantage maison de 7.4% !).</span>
+                  <strong className="text-white block font-semibold">{t('games.pillar2Title', "Ne JAMAIS Prendre l'Assurance :")}</strong>
+                  <span className="text-slate-400">{t('games.pillar2Desc', "L'assurance paie 2 contre 1 alors que la probabilité réelle que le croupier ait un blackjack est de 9 sur 13 (avantage maison de 7.4% !).")}</span>
                 </div>
               </div>
 
               <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-start gap-2.5">
                 <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 font-bold flex items-center justify-center flex-shrink-0">3</span>
                 <div>
-                  <strong className="text-white block font-semibold">Doubler sur 10 et 11 :</strong>
-                  <span className="text-slate-400">Doubler la mise lorsque le croupier a une carte faible (2 à 9) maximise l'espérance de gain grâce à la forte concentration de cartes valant 10 (30.8%).</span>
+                  <strong className="text-white block font-semibold">{t('games.pillar3Title', "Doubler sur 10 et 11 :")}</strong>
+                  <span className="text-slate-400">{t('games.pillar3Desc', "Doubler la mise lorsque le croupier a une carte faible (2 à 9) maximise l'espérance de gain grâce à la forte concentration de cartes valant 10 (30.8%).")}</span>
                 </div>
               </div>
 
               <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-start gap-2.5">
                 <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-300 font-bold flex items-center justify-center flex-shrink-0">4</span>
                 <div>
-                  <strong className="text-white block font-semibold">Laisser le Croupier Sauter (Bust) :</strong>
-                  <span className="text-slate-400">Lorsque vous avez 12 à 16 et que le croupier montre un 4, 5 ou 6, ne prenez aucun risque : il sautera dans plus de 40% des cas.</span>
+                  <strong className="text-white block font-semibold">{t('games.pillar4Title', "Laisser le Croupier Sauter (Bust) :")}</strong>
+                  <span className="text-slate-400">{t('games.pillar4Desc', "Lorsque vous avez 12 à 16 et que le croupier montre un 4, 5 ou 6, ne prenez aucun risque : il sautera dans plus de 40% des cas.")}</span>
                 </div>
               </div>
             </div>
@@ -481,7 +481,7 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
             <h4 className="text-sm font-bold text-white flex items-center gap-2">
-              <span>Sélectionner un Secteur du Cylindre</span>
+              <span>{t('games.selectSector', 'Sélectionner un Secteur du Cylindre')}</span>
             </h4>
 
             <div className="space-y-2">
@@ -497,17 +497,17 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
                 >
                   <div>
                     <span className="text-xs font-bold block">{rouletteSectorsData[key].name}</span>
-                    <span className="text-[11px] text-slate-400">Couverture : {rouletteSectorsData[key].coveragePct}%</span>
+                    <span className="text-[11px] text-slate-400">{t('games.coverage', 'Couverture')} : {rouletteSectorsData[key].coveragePct}%</span>
                   </div>
                   <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-200">
-                    {rouletteSectorsData[key].chipsNeeded} jetons
+                    {rouletteSectorsData[key].chipsNeeded} {t('games.chipsNeeded', 'jetons')}
                   </span>
                 </button>
               ))}
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">Mise unitaire par jeton :</label>
+              <label className="text-xs font-semibold text-slate-300 block mb-1">{t('games.unitBetLabel', 'Mise unitaire par jeton :')}</label>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -529,7 +529,7 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
                 <h4 className="text-base font-bold text-white">{activeSector.name}</h4>
-                <p className="text-xs text-slate-400">Probabilité mathématique de sortie : <strong className="text-emerald-400">{activeSector.coveragePct}%</strong></p>
+                <p className="text-xs text-slate-400">{t('games.mathProbability', 'Probabilité mathématique de sortie :')} <strong className="text-emerald-400">{activeSector.coveragePct}%</strong></p>
               </div>
               <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 font-mono font-bold">
                 {activeSector.payoutRatio}
@@ -542,7 +542,7 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
 
             {/* Numbers Grid */}
             <div>
-              <span className="text-xs font-semibold text-slate-300 block mb-2">Numéros couverts ({activeSector.numbers.length}/37) :</span>
+              <span className="text-xs font-semibold text-slate-300 block mb-2">{t('games.coveredNumbers', 'Numéros couverts')} ({activeSector.numbers.length}/37) :</span>
               <div className="flex flex-wrap gap-1.5">
                 {activeSector.numbers.map((n) => (
                   <span
@@ -562,7 +562,7 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
             </div>
 
             <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-400">
-              💡 <strong>Gestion de mise constructive :</strong> Pour la Roulette Européenne (RTP 97.3%), évitez la Martingale sur les chances simples. Utilisez la rotation de secteurs ou 2 douzaines avec mise plate pour accumuler 5 à 10 unités par session puis encaissez.
+              💡 <strong>{t('games.constructiveBetting', 'Gestion de mise constructive :')}</strong> Pour la Roulette Européenne (RTP 97.3%), évitez la Martingale sur les chances simples. Utilisez la rotation de secteurs ou 2 douzaines avec mise plate pour accumuler 5 à 10 unités par session puis encaissez.
             </div>
           </div>
         </div>
@@ -574,12 +574,12 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
           <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
             <h4 className="text-sm font-bold text-white flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-emerald-400" />
-              Calculateur Quantitatif Crash & Limbo
+              {t('games.crashTitle', 'Calculateur Quantitatif Crash & Limbo')}
             </h4>
 
             <div>
               <div className="flex items-center justify-between text-xs font-semibold text-slate-300 mb-1">
-                <span>Multiplicateur Cible (Cashout) :</span>
+                <span>{t('games.targetMultiplier', 'Multiplicateur Cible (Cashout) :')}</span>
                 <span className="text-emerald-400 font-mono font-bold">{crashTarget.toFixed(2)}x</span>
               </div>
               <input
@@ -594,7 +594,7 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">Solde de référence :</label>
+              <label className="text-xs font-semibold text-slate-300 block mb-1">{t('games.referenceBankroll', 'Solde de référence :')}</label>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -609,12 +609,12 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
 
             <div className="grid grid-cols-2 gap-3 pt-2">
               <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-                <span className="text-[11px] text-slate-400 block">Chance Réelle (99% RTP)</span>
+                <span className="text-[11px] text-slate-400 block">{t('games.realChance', 'Chance Réelle (99% RTP)')}</span>
                 <span className="text-base font-mono font-bold text-emerald-400">{crashWinChance}%</span>
               </div>
 
               <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-                <span className="text-[11px] text-slate-400 block">Mise Kelly Optimale (1/4)</span>
+                <span className="text-[11px] text-slate-400 block">{t('games.kellyBet', 'Mise Kelly Optimale (1/4)')}</span>
                 <span className="text-base font-mono font-bold text-indigo-400">{suggestedBet} {currency} ({safeKellyBetPct}%)</span>
               </div>
             </div>
@@ -623,7 +623,7 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
           <div className="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
             <h4 className="text-sm font-bold text-white flex items-center gap-2">
               <Percent className="w-4 h-4 text-purple-400" />
-              Tableau des Cibles Fréquentes
+              {t('games.frequentTargets', 'Tableau des Cibles Fréquentes')}
             </h4>
 
             <div className="space-y-1.5 text-xs">
@@ -657,12 +657,12 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
             <div>
               <h4 className="text-sm font-bold text-white flex items-center gap-2">
                 <Percent className="w-4 h-4 text-indigo-400" />
-                Spécifications Officielles Stake.com & Gains Maximums par Original
+                {t('games.officialSpecs', 'Spécifications Officielles Stake.com & Gains Maximums par Original')}
               </h4>
-              <p className="text-xs text-slate-400">RTP certifiés Provably Fair HMAC-SHA256 et plafonds mathématiques de multiplicateurs</p>
+              <p className="text-xs text-slate-400">{t('games.provablyFair', 'RTP certifiés Provably Fair HMAC-SHA256 et plafonds mathématiques de multiplicateurs')}</p>
             </div>
             <span className="text-[11px] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 font-mono font-bold self-start sm:self-auto">
-              RTP Standard : 99.00%
+              {t('games.standardRtp', 'RTP Standard : 99.00%')}
             </span>
           </div>
 
@@ -670,12 +670,12 @@ export const AdvancedGamesSuite: React.FC<AdvancedGamesSuiteProps> = ({
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-slate-800 text-slate-400 font-mono">
-                  <th className="py-2.5 px-3">Jeu Original Stake</th>
-                  <th className="py-2.5 px-3">Gain Max Théorique</th>
-                  <th className="py-2.5 px-3">RTP Officiel</th>
-                  <th className="py-2.5 px-3">Avantage Maison</th>
-                  <th className="py-2.5 px-3">Volatilité</th>
-                  <th className="py-2.5 px-3">Stratégie Optimale Constructive</th>
+                  <th className="py-2.5 px-3">{t('games.colGame', 'Jeu Original Stake')}</th>
+                  <th className="py-2.5 px-3">{t('games.colMaxPayout', 'Gain Max Théorique')}</th>
+                  <th className="py-2.5 px-3">{t('games.colRtp', 'RTP Officiel')}</th>
+                  <th className="py-2.5 px-3">{t('games.colEdge', 'Avantage Maison')}</th>
+                  <th className="py-2.5 px-3">{t('games.colVolatility', 'Volatilité')}</th>
+                  <th className="py-2.5 px-3">{t('games.colStrategy', 'Stratégie Optimale Constructive')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60 font-medium">

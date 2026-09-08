@@ -73,6 +73,7 @@ import { getStakeProvablyFairFloat, simulateGameOutcome, generateRandomSeed } fr
 import { MonteCarloBacktestEngine } from './MonteCarloBacktestEngine';
 import { AntebotStrategyChart } from './AntebotStrategyChart';
 import { Dices, ScatterChart } from 'lucide-react';
+import { useTranslation } from '../i18n/LanguageContext';
 
 interface BacktestingSuiteProps {
   currentStrategy: BettingStrategy;
@@ -141,6 +142,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
   credentials,
   onNavigateToTab,
 }) => {
+  const { t } = useTranslation();
   // Engine Mode: 'sequential' (Standard Dataset/CSV/Stake Benchmarks) vs 'monte_carlo' (10,000 Seeds Simulation)
   const [engineMode, setEngineMode] = useState<'sequential' | 'monte_carlo'>('sequential');
 
@@ -943,13 +945,13 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
-                  Backtesting & Stress-Test Haute Fréquence
+                  {t('backtesting.title', 'Backtesting & Stress-Test Haute Fréquence')}
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 uppercase tracking-widest">
                     Quant Engine
                   </span>
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-400">
-                  Simulez et éprouvez vos algorithmes sur des dizaines de milliers de rounds réels Stake ou fichiers CSV en 1-clic avant tout déploiement en direct.
+                  {t('backtesting.subtitle', 'Simulez vos stratégies sur 1 000 à 1 000 000 de tirages réels ou stochastiques pour valider leur espérance mathématique avant de parier.')}
                 </p>
               </div>
             </div>
@@ -963,7 +965,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
                 className="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-slate-950 font-bold text-xs sm:text-sm transition-all shadow-md shadow-orange-500/20 flex items-center gap-2 hover:scale-[1.02] active:scale-98"
               >
                 <Zap className="w-4 h-4 fill-current" />
-                <span>Déployer vers le Bot Automatique</span>
+                <span>{t('backtesting.deployToAutoBet', 'Déployer sur Auto-Bet')}</span>
               </button>
             )}
 
@@ -973,7 +975,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
                 className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-medium text-xs sm:text-sm transition-all flex items-center gap-2"
               >
                 <Download className="w-4 h-4 text-emerald-400" />
-                <span>Exporter Rapport (.CSV)</span>
+                <span>{t('backtesting.exportCsv', 'Exporter Rapport (.CSV)')}</span>
               </button>
             )}
           </div>
@@ -992,7 +994,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
           }`}
         >
           <History className="w-4 h-4" />
-          <span>Backtest Historique Séquentiel (Benchmarks & CSV)</span>
+          <span>{t('backtesting.modeSequential', 'Backtest Historique Séquentiel (Benchmarks & CSV)')}</span>
         </button>
 
         <button
@@ -1005,9 +1007,9 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
           }`}
         >
           <ScatterChart className="w-4 h-4 text-purple-300" />
-          <span>Simulation Monte Carlo Multi-Seeds</span>
+          <span>{t('backtesting.modeMonteCarlo', 'Simulation Monte Carlo Multi-Seeds')}</span>
           <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-200 border border-purple-400/40 tracking-wider">
-            10 000 Itérations
+            {t('backtesting.monteCarloTag', '10 000 Itérations')}
           </span>
         </button>
       </div>
@@ -1032,7 +1034,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold text-slate-200 flex items-center gap-2">
                 <Database className="w-4 h-4 text-emerald-400" />
-                <span>Source des Données Historiques</span>
+                <span>{t('backtesting.dataSourceTitle', 'Source des Données Historiques')}</span>
               </h2>
               <span className="text-[11px] text-slate-400">
                 {dataSource === 'dataset' ? 'Benchmarks Stake' : dataSource === 'csv' ? 'Fichier Personnalisé' : dataSource === 'generator' ? 'Générateur Provably Fair' : 'Stake API Direct'}
@@ -1050,7 +1052,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Benchmarks</span>
+                <span>{t('backtesting.benchmarksTab', 'Benchmarks')}</span>
               </button>
 
               <button
@@ -1062,7 +1064,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
                 }`}
               >
                 <FileSpreadsheet className="w-3.5 h-3.5" />
-                <span>Fichier CSV</span>
+                <span>{t('backtesting.csvTab', 'Fichier CSV')}</span>
               </button>
 
               <button
@@ -1074,7 +1076,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
                 }`}
               >
                 <Cpu className="w-3.5 h-3.5" />
-                <span>Générateur Seed</span>
+                <span>{t('backtesting.seedGenTab', 'Générateur Seed')}</span>
               </button>
             </div>
 
@@ -1082,7 +1084,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
             {dataSource === 'dataset' && (
               <div className="space-y-2.5">
                 <p className="text-xs text-slate-400">
-                  Sélectionnez un échantillon historique étalonné selon les mathématiques officielles de Stake.com :
+                  {t('backtesting.benchmarkSelectHelp', 'Sélectionnez un échantillon historique étalonné selon les mathématiques officielles de Stake.com :')}
                 </p>
                 <div className="space-y-2">
                   {BENCHMARK_DATASETS.map((ds) => (
@@ -1164,16 +1166,16 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
                         📄 {csvFileName}
                       </p>
                       <p className="text-[11px] text-slate-400">
-                        {uploadedRounds.length.toLocaleString('fr-FR')} rounds détectés et prêts pour la simulation.
+                        {uploadedRounds.length.toLocaleString('fr-FR')} {t('backtesting.rounds', 'rounds')} {t('common.ready', 'prêts')}.
                       </p>
                     </div>
                   ) : (
                     <div className="space-y-1">
                       <p className="text-xs font-bold text-slate-200">
-                        Glissez votre export CSV de paris Stake ou cliquez pour importer
+                        {t('backtesting.uploadCsvTitle', 'Déposer un fichier CSV exporté depuis Stake ou un simulateur')}
                       </p>
                       <p className="text-[11px] text-slate-500">
-                        Formats supportés : CSV Stake (multipliers, rolls, payouts) ou JSON
+                        {t('backtesting.uploadCsvHelp', 'Formats supportés : .csv avec colonnes roll, outcome ou multiplier')}
                       </p>
                     </div>
                   )}
@@ -1193,7 +1195,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
               <div className="space-y-3 text-xs">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-slate-400 mb-1 font-medium">Jeu Stake</label>
+                    <label className="block text-slate-400 mb-1 font-medium">{t('backtesting.gameChoice', 'Jeu Stake simulé :')}</label>
                     <select
                       value={genGame}
                       onChange={(e) => setGenGame(e.target.value as StakeGameType)}
@@ -1205,23 +1207,23 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-slate-400 mb-1 font-medium">Volume de rounds</label>
+                    <label className="block text-slate-400 mb-1 font-medium">{t('backtesting.roundsCount', 'Nombre de rounds à simuler :')}</label>
                     <select
                       value={genRoundsCount}
                       onChange={(e) => setGenRoundsCount(Number(e.target.value))}
                       className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-emerald-500"
                     >
-                      <option value={1000}>1 000 rounds (Rapide)</option>
+                      <option value={1000}>1 000 rounds</option>
                       <option value={5000}>5 000 rounds</option>
-                      <option value={10000}>10 000 rounds (Standard)</option>
-                      <option value={25000}>25 000 rounds (Stress-Test)</option>
-                      <option value={50000}>50 000 rounds (Endurance)</option>
+                      <option value={10000}>10 000 rounds</option>
+                      <option value={25000}>25 000 rounds</option>
+                      <option value={50000}>50 000 rounds</option>
                     </select>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 mb-1 font-medium">Client Seed (Aléatoire)</label>
+                  <label className="block text-slate-400 mb-1 font-medium">{t('backtesting.clientSeed', 'Client Seed utilisateur :')}</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -1250,7 +1252,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold text-slate-200 flex items-center gap-2">
                 <SlidersHorizontal className="w-4 h-4 text-orange-400" />
-                <span>Stratégie à Tester</span>
+                <span>{t('backtesting.testedStrategy', 'Stratégie Testée')}</span>
               </h2>
               
               {/* Preset Selector */}
@@ -1273,7 +1275,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
             {/* Parameter Fields */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
               <div>
-                <label className="block text-slate-400 mb-1 font-medium">Bankroll Initial</label>
+                <label className="block text-slate-400 mb-1 font-medium">{t('backtesting.initialBankroll', 'Capital Initial')}</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -1286,7 +1288,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1 font-medium">Mise de Base</label>
+                <label className="block text-slate-400 mb-1 font-medium">{t('bot.baseBet', 'Mise de Base')}</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -1300,7 +1302,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1 font-medium">Multiplicateur Cible</label>
+                <label className="block text-slate-400 mb-1 font-medium">{t('bot.targetMultiplier', 'Multiplicateur Cible')}</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -1318,7 +1320,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1 font-medium">Chances de Gain</label>
+                <label className="block text-slate-400 mb-1 font-medium">{t('bot.winChance', 'Chances de Gain')}</label>
                 <div className="relative">
                   <input
                     type="text"
@@ -1336,7 +1338,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
                 <div className="flex items-center justify-between text-slate-300 font-semibold">
                   <span className="flex items-center gap-1.5 text-rose-400">
                     <TrendingDown className="w-3.5 h-3.5" />
-                    <span>En cas de Perte (onLossAction)</span>
+                    <span>{t('bot.onLossAction', 'En cas de Perte')}</span>
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -1345,11 +1347,11 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
                     onChange={(e: any) => setTestStrategy((prev) => ({ ...prev, onLossAction: e.target.value }))}
                     className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-slate-200 text-xs"
                   >
-                    <option value="multiply">Multiplier (x)</option>
-                    <option value="increase_pct">Augmenter de (%)</option>
-                    <option value="increase_fixed">Augmenter Fixe (+)</option>
-                    <option value="fibonacci">Suite Fibonacci</option>
-                    <option value="reset">Réinitialiser (Mise Plate)</option>
+                    <option value="multiply">{t('bot.multiply', 'Multiplier (x)')}</option>
+                    <option value="increase_pct">{t('bot.increasePct', 'Augmenter de (%)')}</option>
+                    <option value="increase_fixed">{t('bot.increaseFixed', 'Augmenter Fixe (+)')}</option>
+                    <option value="fibonacci">Fibonacci</option>
+                    <option value="reset">{t('bot.resetBase', 'Réinitialiser')}</option>
                     <option value="custom">D'Alembert (+1)</option>
                   </select>
 
@@ -1368,7 +1370,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
                 <div className="flex items-center justify-between text-slate-300 font-semibold">
                   <span className="flex items-center gap-1.5 text-emerald-400">
                     <TrendingUp className="w-3.5 h-3.5" />
-                    <span>En cas de Gain (onWinAction)</span>
+                    <span>{t('bot.onWinAction', 'En cas de Gain')}</span>
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -1377,8 +1379,8 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
                     onChange={(e: any) => setTestStrategy((prev) => ({ ...prev, onWinAction: e.target.value }))}
                     className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-slate-200 text-xs"
                   >
-                    <option value="reset">Réinitialiser à la base</option>
-                    <option value="increase_pct">Augmenter de (%)</option>
+                    <option value="reset">{t('bot.resetBase', 'Réinitialiser')}</option>
+                    <option value="increase_pct">{t('bot.increasePct', 'Augmenter de (%)')}</option>
                     <option value="custom">Oscar's Grind / Paroli</option>
                   </select>
 
@@ -1403,7 +1405,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
                   className="rounded text-emerald-500 focus:ring-0"
                 />
                 <span className="text-[11px] text-slate-300">
-                  Stop Loss ({testStrategy.stopOnLoss || 20} {currency})
+                  {t('bot.stopLoss', 'Stop Loss')} ({testStrategy.stopOnLoss || 20} {currency})
                 </span>
               </label>
 
@@ -1415,7 +1417,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
                   className="rounded text-emerald-500 focus:ring-0"
                 />
                 <span className="text-[11px] text-slate-300">
-                  Take Profit ({testStrategy.stopOnProfit || 25} {currency})
+                  {t('bot.takeProfit', 'Take Profit')} ({testStrategy.stopOnProfit || 25} {currency})
                 </span>
               </label>
 
@@ -1427,7 +1429,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
                   className="rounded text-emerald-500 focus:ring-0"
                 />
                 <span className="text-[11px] text-slate-300 truncate">
-                  Plafond Mise ({maxBetCapAmount} {currency})
+                  {t('bot.maxBetLimit', 'Plafond Mise')} ({maxBetCapAmount} {currency})
                 </span>
               </label>
             </div>
@@ -1441,12 +1443,12 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
               {isSimulating ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin text-slate-950" />
-                  <span>Simulation en cours ({simulationProgress}%)...</span>
+                  <span>{t('backtesting.simulating', 'Simulation en cours...')} ({simulationProgress}%)</span>
                 </>
               ) : (
                 <>
                   <Play className="w-4 h-4 fill-current text-slate-950" />
-                  <span>Lancer le Backtest (1-Clic)</span>
+                  <span>{t('backtesting.runSimulation', 'Lancer la Simulation')}</span>
                 </>
               )}
             </button>
@@ -1471,7 +1473,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
             }`}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  Indice de Robustesse
+                  {t('backtesting.mathDiagnosis', 'Diagnostic Mathématique')}
                 </span>
                 <span className={`text-xs font-black px-2 py-0.5 rounded-full ${
                   backtestSummary.isBusted
@@ -1496,10 +1498,10 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
             <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  Résultat Net / ROI
+                  {t('backtesting.netProfit', 'Profit Net')} / ROI
                 </span>
                 <span className="text-[10px] font-bold text-slate-500">
-                  {backtestSummary.roundsExecuted.toLocaleString('fr-FR')} rounds
+                  {backtestSummary.roundsExecuted.toLocaleString('fr-FR')} {t('backtesting.roundsPlayed', 'Tours')}
                 </span>
               </div>
 
@@ -1517,7 +1519,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
               </div>
 
               <div className="text-[11px] text-slate-400 flex items-center justify-between pt-1 border-t border-slate-800">
-                <span>Solde Final :</span>
+                <span>{t('backtesting.finalBankroll', 'Bankroll Finale')} :</span>
                 <span className="font-bold text-slate-200">{backtestSummary.finalBankroll} {currency}</span>
               </div>
             </div>
@@ -1526,10 +1528,10 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
             <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  Drawdown Maximum
+                  {t('backtesting.maxDrawdown', 'Drawdown Maximum')}
                 </span>
                 <span className="text-[10px] font-bold text-rose-400">
-                  Pire Repli
+                  {t('backtesting.worstDrop', 'Pire Repli')}
                 </span>
               </div>
 
@@ -1543,7 +1545,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
               </div>
 
               <div className="text-[11px] text-slate-400 flex items-center justify-between pt-1 border-t border-slate-800">
-                <span>Mise Max Atteinte :</span>
+                <span>{t('backtesting.maxBetReached', 'Mise Max Atteinte :')}</span>
                 <span className="font-bold text-amber-400">{backtestSummary.peakBetAmount} {currency} ({backtestSummary.peakBetAsPctOfBankroll}%)</span>
               </div>
             </div>
@@ -1552,7 +1554,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
             <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-lg space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  Volume Wager / Séries
+                  {t('backtesting.wagerVolumeStreaks', 'Volume Wager / Séries')}
                 </span>
                 <span className="text-[10px] font-bold text-sky-400">
                   {backtestSummary.turnoverMultiplier}x Bankroll
@@ -1566,8 +1568,8 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
               </div>
 
               <div className="text-[11px] text-slate-400 flex items-center justify-between pt-1 border-t border-slate-800">
-                <span>Pire Série Défaites :</span>
-                <span className="font-bold text-rose-400">{backtestSummary.longestLossStreak} consécutives</span>
+                <span>{t('backtesting.worstLossStreak', 'Pire Série Défaites :')}</span>
+                <span className="font-bold text-rose-400">{backtestSummary.longestLossStreak} {t('backtesting.consecutive', 'consécutives')}</span>
               </div>
             </div>
           </div>
@@ -1592,10 +1594,10 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
               <div>
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
                   <FileText className="w-4 h-4 text-emerald-400" />
-                  <span>Journal Détaillé des Paris ({filteredLogs.length.toLocaleString('fr-FR')} entrées)</span>
+                  <span>{t('backtesting.roundLogs', 'Journal Détaillé des Paris')} ({filteredLogs.length.toLocaleString('fr-FR')} entrées)</span>
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Inspectez chaque tirage, variation de mise et résultat calculé.
+                  {t('backtesting.inspectRoundsHelp', 'Inspectez chaque tirage, variation de mise et résultat calculé.')}
                 </p>
               </div>
 
@@ -1610,7 +1612,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
                       setLogSearchQuery(e.target.value);
                       setLogsPage(1);
                     }}
-                    placeholder="Rechercher round..."
+                    placeholder={t('backtesting.searchRoundPlaceholder', 'Rechercher un round, montant...')}
                     className="bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
@@ -1623,10 +1625,10 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
                   }}
                   className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
                 >
-                  <option value="all">Tous les rounds</option>
-                  <option value="losses">Pertes uniquement</option>
-                  <option value="wins">Gains uniquement</option>
-                  <option value="top_bets">Mises Élevées (&gt; 2x base)</option>
+                  <option value="all">{t('backtesting.filterAll', 'Tous les rounds')}</option>
+                  <option value="losses">{t('backtesting.filterLosses', 'Défaites uniquement')}</option>
+                  <option value="wins">{t('backtesting.filterWins', 'Victoires uniquement')}</option>
+                  <option value="top_bets">{t('backtesting.filterTopBets', 'Plus grosses mises')}</option>
                 </select>
               </div>
             </div>
@@ -1637,11 +1639,11 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
                 <thead className="bg-slate-950 text-slate-400 font-semibold border-b border-slate-800">
                   <tr>
                     <th className="py-2.5 px-3">Round</th>
-                    <th className="py-2.5 px-3">Mise</th>
-                    <th className="py-2.5 px-3">Résultat</th>
+                    <th className="py-2.5 px-3">{t('bot.bet', 'Mise')}</th>
+                    <th className="py-2.5 px-3">{t('bot.result', 'Résultat')}</th>
                     <th className="py-2.5 px-3">Tirage / Mult.</th>
-                    <th className="py-2.5 px-3">Profit Net</th>
-                    <th className="py-2.5 px-3">Solde Total</th>
+                    <th className="py-2.5 px-3">{t('bot.netProfit', 'Profit Net')}</th>
+                    <th className="py-2.5 px-3">{t('bot.balance', 'Solde')}</th>
                     <th className="py-2.5 px-3">Drawdown</th>
                   </tr>
                 </thead>
@@ -1656,7 +1658,7 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
                             ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                             : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
                         }`}>
-                          {log.won ? '✓ GAGNÉ' : '✗ PERDU'}
+                          {log.won ? t('bot.winBadge', '✓ GAGNÉ') : t('bot.lossBadge', '✗ PERDU')}
                         </span>
                       </td>
                       <td className="py-2 px-3 text-slate-300">
@@ -1678,21 +1680,21 @@ export const BacktestingSuite: React.FC<BacktestingSuiteProps> = ({
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex items-center justify-between text-xs text-slate-400 pt-2">
-                <span>Page {logsPage} sur {totalPages}</span>
+                <span>Page {logsPage} / {totalPages}</span>
                 <div className="flex gap-1.5">
                   <button
                     onClick={() => setLogsPage((p) => Math.max(1, p - 1))}
                     disabled={logsPage === 1}
                     className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200"
                   >
-                    Précédent
+                    {t('common.previous', 'Précédent')}
                   </button>
                   <button
                     onClick={() => setLogsPage((p) => Math.min(totalPages, p + 1))}
                     disabled={logsPage === totalPages}
                     className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200"
                   >
-                    Suivant
+                    {t('common.next', 'Suivant')}
                   </button>
                 </div>
               </div>

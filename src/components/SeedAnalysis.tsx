@@ -201,13 +201,13 @@ export const SeedAnalysis: React.FC<SeedAnalysisProps> = ({
           </div>
           <div>
             <h3 className="text-base font-bold text-white flex items-center gap-2">
-              Analyseur de Seed Stake & Probabilités d'Objectif
+              {t('seed.title', 'Analyseur de Seed Stake & Probabilités d\'Objectif')}
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
                 Provably Fair HMAC-SHA256
               </span>
             </h3>
             <p className="text-xs text-slate-300 mt-0.5">
-              Auditez vos Seeds Stake révélées ou calculez la probabilité mathématique exacte (Monte Carlo) d'atteindre votre cible de gain avant votre stop-loss.
+              {t('seed.subtitle', 'Auditez vos Seeds Stake révélées ou calculez la probabilité mathématique exacte (Monte Carlo) d\'atteindre votre cible de gain avant votre stop-loss.')}
             </p>
           </div>
         </div>
@@ -240,7 +240,7 @@ export const SeedAnalysis: React.FC<SeedAnalysisProps> = ({
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <h4 className="text-sm font-bold text-white flex items-center gap-2">
               <Search className="w-4 h-4 text-indigo-400" />
-              Décrypteur de Seed (Vérification Provably Fair)
+              {t('seed.decryptorTitle', 'Décrypteur de Seed (Vérification Provably Fair)')}
             </h4>
             {activeClientSeed && (
               <button
@@ -250,7 +250,7 @@ export const SeedAnalysis: React.FC<SeedAnalysisProps> = ({
                 title="Copier la graine et le nonce actifs du bot dans l'analyseur"
               >
                 <Key className="w-3 h-3 text-indigo-400" />
-                <span>Charger Seed Active</span>
+                <span>{t('seed.loadActiveSeed', 'Charger Seed Active')}</span>
               </button>
             )}
           </div>
@@ -259,7 +259,7 @@ export const SeedAnalysis: React.FC<SeedAnalysisProps> = ({
             {/* Server Seed */}
             <div>
               <label className="text-xs font-semibold text-slate-300 block mb-1 flex items-center justify-between">
-                <span>Server Seed (Révélé ou Actif)</span>
+                <span>{t('seed.serverSeed', 'Server Seed (Révélé ou Actif)')}</span>
                 <span className="text-[10px] text-slate-500 font-mono">SHA256 / Hex</span>
               </label>
               <input
@@ -274,7 +274,7 @@ export const SeedAnalysis: React.FC<SeedAnalysisProps> = ({
             {/* Client Seed */}
             <div>
               <label className="text-xs font-semibold text-slate-300 block mb-1">
-                Client Seed
+                {t('seed.clientSeed', 'Client Seed')}
               </label>
               <input
                 type="text"
@@ -288,7 +288,7 @@ export const SeedAnalysis: React.FC<SeedAnalysisProps> = ({
             {/* Nonce Range & Game */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div>
-                <label className="text-[11px] font-semibold text-slate-400 block mb-1">Jeu</label>
+                <label className="text-[11px] font-semibold text-slate-400 block mb-1">{t('seed.game', 'Jeu')}</label>
                 <select
                   value={selectedGame}
                   onChange={(e) => setSelectedGame(e.target.value as StakeGameType)}
@@ -403,7 +403,7 @@ export const SeedAnalysis: React.FC<SeedAnalysisProps> = ({
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <h4 className="text-sm font-bold text-white flex items-center gap-2">
               <Target className="w-4 h-4 text-emerald-400" />
-              Calculateur de Probabilité d'Atteinte d'Objectif
+              {t('seed.monteCarloTitle', 'Calculateur de Probabilité d\'Atteinte d\'Objectif')}
             </h4>
             <span className="text-[11px] font-semibold text-emerald-400">
               Monte Carlo
@@ -418,7 +418,7 @@ export const SeedAnalysis: React.FC<SeedAnalysisProps> = ({
             {/* Target Profit % */}
             <div>
               <label className="text-xs font-semibold text-slate-300 block mb-1">
-                Objectif Gain (TP)
+                {t('seed.targetProfitPct', 'Objectif Gain (TP)')}
               </label>
               <div className="relative">
                 <input
@@ -439,7 +439,7 @@ export const SeedAnalysis: React.FC<SeedAnalysisProps> = ({
             {/* Stop Loss % */}
             <div>
               <label className="text-xs font-semibold text-slate-300 block mb-1">
-                Limite Perte (SL)
+                {t('seed.stopLossPct', 'Limite Perte (SL)')}
               </label>
               <div className="relative">
                 <input
@@ -460,7 +460,7 @@ export const SeedAnalysis: React.FC<SeedAnalysisProps> = ({
             {/* Bet Size % */}
             <div>
               <label className="text-xs font-semibold text-slate-300 block mb-1">
-                Mise Unitaire
+                {t('seed.baseBetPct', 'Mise Unitaire')}
               </label>
               <div className="relative">
                 <input
@@ -486,14 +486,14 @@ export const SeedAnalysis: React.FC<SeedAnalysisProps> = ({
             className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50"
           >
             <Play className="w-4 h-4 fill-current" />
-            <span>{isSimulatingMonteCarlo ? 'Calcul des probabilités en cours...' : 'Lancer la Simulation Monte Carlo (500 runs)'}</span>
+            <span>{isSimulatingMonteCarlo ? 'Calcul des probabilités en cours...' : t('seed.runMonteCarlo', 'Lancer la Simulation Monte Carlo (500 runs)')}</span>
           </button>
 
           {/* Monte Carlo Results Display */}
           {monteCarloResult && (
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-300">Résultat de Probabilité Statistique</span>
+                <span className="text-xs font-bold text-slate-300">{t('seed.resultsTitle', 'Résultat de Probabilité Statistique')}</span>
                 <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400">
                   {simulationsRun} itérations
                 </span>
@@ -501,7 +501,7 @@ export const SeedAnalysis: React.FC<SeedAnalysisProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-slate-900 p-3 rounded-xl border border-emerald-500/20 text-center">
-                  <div className="text-[10px] text-slate-400 font-medium">Chances d'atteindre le TP (+{targetProfitPercent}%)</div>
+                  <div className="text-[10px] text-slate-400 font-medium">{t('seed.targetProb', 'Chances d\'atteindre le TP')} (+{targetProfitPercent}%)</div>
                   <div className="text-2xl font-extrabold text-emerald-400 font-mono mt-1">
                     {monteCarloResult.targetReachedProbability}%
                   </div>
@@ -511,7 +511,7 @@ export const SeedAnalysis: React.FC<SeedAnalysisProps> = ({
                 </div>
 
                 <div className="bg-slate-900 p-3 rounded-xl border border-rose-500/20 text-center">
-                  <div className="text-[10px] text-slate-400 font-medium">Risque de toucher le SL (-{stopLossPercent}%)</div>
+                  <div className="text-[10px] text-slate-400 font-medium">{t('seed.ruinProb', 'Risque de toucher le SL')} (-{stopLossPercent}%)</div>
                   <div className="text-2xl font-extrabold text-rose-400 font-mono mt-1">
                     {monteCarloResult.ruinProbability}%
                   </div>
